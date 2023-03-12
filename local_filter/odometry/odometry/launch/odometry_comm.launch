@@ -1,5 +1,7 @@
 <launch>
 
+    <include file="$(find local_filter)/launch/firmware_setup/comm.launch"/>
+
     <node pkg="odometry" type="odometry_node" name="odometry_node" output="screen">
         
         <param name="active" value="true"/>

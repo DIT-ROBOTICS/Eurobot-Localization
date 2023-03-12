@@ -86,8 +86,27 @@ bool Odometry::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
         this->odometry_output_.twist.covariance[35] = p_covariance_;
     }
 
+    if(this->nh_local_.param<double>("covariance_multi_vx", p_covariance_multi_, 0.)){
+        ROS_INFO_STREAM("[Odometry] : vx covariance multiplicant set to " << p_covariance_multi_); 
+        covariance_multi_[0] = p_covariance_multi_;
+    }
+
+    if(this->nh_local_.param<double>("covariance_multi_vy", p_covariance_multi_, 0.)){
+        ROS_INFO_STREAM("[Odometry] : vy covariance multiplicant set to " << p_covariance_multi_); 
+        covariance_multi_[1] = p_covariance_multi_;
+    }
+
+    if(this->nh_local_.param<double>("covariance_multi_vz", p_covariance_multi_, 0.)){
+        ROS_INFO_STREAM("[Odometry] : vz covariance multiplicant set to " << p_covariance_multi_); 
+        covariance_multi_[2] = p_covariance_multi_;
+    }
+
     if(this->nh_local_.param<bool>("using_nav_vel_cb", p_sub_from_nav_, 0.)){
         ROS_INFO_STREAM("[Odometry] : current subscribe from nav cmd_vel is set to " << p_sub_from_nav_); 
+	}
+
+    if(this->nh_local_.param<bool>("using_dynamic_reconf", p_use_dynamic_reconf_, true)){
+        ROS_INFO_STREAM("[Odometry] : using dynamic reconfigure is set to " << p_use_dynamic_reconf_); 
 	}
 
     if(p_active_ != prev_active) {
@@ -108,6 +127,10 @@ bool Odometry::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
             if(this->p_update_params_){
                 this->param_srv_ = nh_local_.advertiseService("params", &Odometry::UpdateParams, this);
             }
+
+			if(this->p_use_dynamic_reconf_){
+				this->SetDynamicReconfigure();
+			}
 			
         }
         else {
@@ -122,10 +145,10 @@ bool Odometry::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Resp
     }
 
 
-	/* -- Backup covariance -- */
-	this->odometry_output_backup_ = this->odometry_output_;
+    /* -- Backup covariance -- */
+    this->odometry_output_backup_ = this->odometry_output_;
 		
-    /* -- Set basic variables -- */
+	/* -- Set basic variables -- */
     this->odometry_output_.header.frame_id = this->p_fixed_frame_;
     this->odometry_output_.child_frame_id = this->p_target_frame_;
 
@@ -150,16 +173,18 @@ void Odometry::TwistCallback(const geometry_msgs::Twist::ConstPtr &msg){
 
 void Odometry::P_VelocityCallback(const geometry_msgs::Twist::ConstPtr &msg){
 
-	static double magnification;
-
-	magnification = msg->linear.x + 1;
+	double covariance_multi[3];
 	
-	this->odometry_output_.twist.covariance[0] = this->odometry_output_backup_.twist.covariance[0] * magnification;
-	this->odometry_output_.twist.covariance[7] = this->odometry_output_backup_.twist.covariance[7] * magnification;
-	this->odometry_output_.twist.covariance[14] = this->odometry_output_backup_.twist.covariance[14] * magnification;
-	this->odometry_output_.twist.covariance[21] = this->odometry_output_backup_.twist.covariance[21] * magnification;
-	this->odometry_output_.twist.covariance[28] = this->odometry_output_backup_.twist.covariance[28] * magnification;
-	this->odometry_output_.twist.covariance[35] = this->odometry_output_backup_.twist.covariance[35] * magnification;
+	covariance_multi[0] = this->covariance_multi_[0] * msg->linear.x; 
+	covariance_multi[1] = this->covariance_multi_[1] * msg->linear.y; 
+	covariance_multi[2] = this->covariance_multi_[2] * msg->angular.z; 
+
+	this->odometry_output_.twist.covariance[0] = covariance_multi[0] + this->odometry_output_backup_.twist.covariance[0];
+	this->odometry_output_.twist.covariance[7] = covariance_multi[1] + this->odometry_output_backup_.twist.covariance[7];
+	this->odometry_output_.twist.covariance[14] = covariance_multi[2]+ this->odometry_output_backup_.twist.covariance[14];
+	this->odometry_output_.twist.covariance[21] = covariance_multi[0] + this->odometry_output_backup_.twist.covariance[21];
+	this->odometry_output_.twist.covariance[28] = covariance_multi[1] + this->odometry_output_backup_.twist.covariance[28];
+	this->odometry_output_.twist.covariance[35] = covariance_multi[2] + this->odometry_output_backup_.twist.covariance[35];
 
 }
 
@@ -181,3 +206,127 @@ void Odometry::publish(){
 
 }
 
+void Odometry::DynamicParamCallback(odometry::odometry_paramConfig &config, uint32_t level){
+
+    /* get param */
+    if(p_publish_ != config.publish){
+		this->p_publish_ = config.publish;
+        ROS_INFO_STREAM("[Odometry] : publish set to " << p_publish_);
+    }
+
+    if(p_twist_topic_ != config.twist_topic){
+
+		this->p_twist_topic_ = config.twist_topic;
+
+		if(p_active_){
+            this->twist_sub_ = nh_.subscribe(p_twist_topic_, 10, &Odometry::TwistCallback, this);
+		}
+
+        ROS_INFO_STREAM("[Odometry] : Current subscribe topic [ " << p_twist_topic_ << " ]"); 
+    }
+
+    if(p_odom_topic_ != config.odom_topic){
+
+		this->p_odom_topic_ = config.odom_topic;
+
+		if(p_active_){
+            this->odom_pub_ = nh_.advertise<nav_msgs::Odometry>(p_odom_topic_, 10);
+		}
+
+        ROS_INFO_STREAM("[Odometry] : Current publish topic [ " << p_odom_topic_ << " ]"); 
+    }
+
+    if(p_fixed_frame_ != config.fixed_frame){
+
+		this->p_fixed_frame_ = config.fixed_frame;
+		this->odometry_output_.header.frame_id = this->p_fixed_frame_;
+
+        ROS_INFO_STREAM("[Odometry] : Current fixed frame [ " << p_fixed_frame_ << " ]"); 
+    }
+
+    if(p_target_frame_ != config.target_frame){
+
+		this->p_target_frame_ = config.target_frame;
+		this->odometry_output_.child_frame_id = this->p_target_frame_;
+
+        ROS_INFO_STREAM("[Odometry] : Current target frame [ " << p_target_frame_ << " ]"); 
+    }
+
+    if(this->odometry_output_.twist.covariance[0] != config.covariance_x){
+
+        this->odometry_output_backup_.twist.covariance[0] = config.covariance_x;
+
+        ROS_INFO_STREAM("[Odometry] : x covariance set to " << this->odometry_output_.twist.covariance[0]);
+    }
+
+    if(this->odometry_output_.twist.covariance[7] != config.covariance_y){
+
+        this->odometry_output_backup_.twist.covariance[7] = config.covariance_y;
+
+        ROS_INFO_STREAM("[Odometry] : y covariance set to " << this->odometry_output_.twist.covariance[7]);
+    }
+
+    if(this->odometry_output_.twist.covariance[14] != config.covariance_z){
+
+        this->odometry_output_backup_.twist.covariance[14] = config.covariance_z;
+
+        ROS_INFO_STREAM("[Odometry] : z covariance set to " << this->odometry_output_.twist.covariance[14]);
+    }
+
+    if(this->odometry_output_.twist.covariance[21] != config.covariance_vx){
+
+        this->odometry_output_backup_.twist.covariance[21] = config.covariance_vx;
+
+        ROS_INFO_STREAM("[Odometry] : vx covariance set to " << this->odometry_output_.twist.covariance[21]);
+    }
+	
+    if(this->odometry_output_.twist.covariance[28] != config.covariance_vy){
+
+        this->odometry_output_backup_.twist.covariance[28] = config.covariance_vy;
+
+        ROS_INFO_STREAM("[Odometry] : vy covariance set to " << this->odometry_output_.twist.covariance[28]);
+    }
+
+    if(this->odometry_output_.twist.covariance[35] != config.covariance_vz){
+
+        this->odometry_output_backup_.twist.covariance[35] = config.covariance_vz;
+
+        ROS_INFO_STREAM("[Odometry] : vz covariance set to " << this->odometry_output_.twist.covariance[35]);
+    }
+
+    if(this->covariance_multi_[0] != config.covariance_multi_vx){
+
+        this->covariance_multi_[0] = config.covariance_multi_vx;
+
+        ROS_INFO_STREAM("[Odometry] : vx covariance multiplicant set to " << this->covariance_multi_[0]);
+    }
+
+    if(this->covariance_multi_[1] != config.covariance_multi_vy){
+
+        this->covariance_multi_[1] = config.covariance_multi_vy;
+
+        ROS_INFO_STREAM("[Odometry] : vy covariance multiplicant set to " << this->covariance_multi_[1]);
+    }
+
+    if(this->covariance_multi_[2] != config.covariance_multi_vz){
+
+        this->covariance_multi_[2] = config.covariance_multi_vz;
+
+        ROS_INFO_STREAM("[Odometry] : vz covariance multiplicant set to " << this->covariance_multi_[2]);
+    }
+
+}
+
+void Odometry::SetDynamicReconfigure(){
+
+	static dynamic_reconfigure::Server<odometry::odometry_paramConfig> dynamic_param_srv_;
+
+	dynamic_reconfigure::Server<odometry::odometry_paramConfig>::CallbackType callback;
+
+    // If the function is a class member : 
+    // boost::bind(&function, class instance, _1, _2)
+    callback = boost::bind(&Odometry::DynamicParamCallback, this, _1, _2);
+
+    // Set callback function to param server
+    dynamic_param_srv_.setCallback(callback);
+}

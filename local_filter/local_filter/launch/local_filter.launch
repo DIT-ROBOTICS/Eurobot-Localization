@@ -29,10 +29,31 @@
         </include>
 
         <!-- IMU firmware and covariance feedback loop node (contain IMU spatial launch) -->
-        <include file="$(find imu_drive)/launch/imu_drive_firm.launch">
+        <!-- <include file="$(find imu_drive)/launch/imu_drive_firm.launch">
             <arg name="robot_name" value="$(arg robot_name)"/>
             <arg name="robot_name_slash" value="$(arg robot_name_slash)"/>
-        </include>
+        </include> -->
+
+        <!-- P_control test -->
+        
     </group>
+    <node pkg="p_control" type="p_control_node" name="p_control_node" output="screen">
+            <param name="active" value="true"/>
+            <param name="publish" value="true"/>
+            <param name="sub_topic" value="/$(arg robot_name)/global_filter"/>
+            <param name="pub_topic" value="/$(arg robot_name)/cmd_vel"/>
+            <param name="update_params" value="false"/>
+            <param name="goal_x" value="1.0"/>
+            <param name="goal_y" value="0.0"/>
+            <param name="goal_yaw" value="0.0"/>
+            <param name="goal_round" value="10.0"/>
+            <param name="max_linear_vel" value="0.2"/>
+            <param name="max_angular_vel" value="1.2"/>
+            <param name="min_angular_vel" value="0.2"/>
+            <param name="angular_accel" value="0.002"/>
+            <param name="with_p_control" value="true"/>
+            <param name="using_orientation_data" value="true"/>
+            <param name="using_linear_data" value="false"/>
+        </node>
 
 </launch>

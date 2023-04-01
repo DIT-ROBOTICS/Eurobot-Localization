@@ -54,9 +54,17 @@ private :
     double position_now_y = 0;
     double orientation_now_z_;
     double p_round_now_ = 0;
+    double p_linear_accel_x_;
+    double p_linear_accel_y_;
+    double p_min_angular_vel_;
+    double p_angular_accel_;
 
     bool p_with_p_control_;
     bool p_using_orientation_data_;
+    bool p_using_linear_data_;
+    bool if_first =1;
+    bool p_or_n;
+    bool p_or_n_last;
 
     std::string p_pub_topic_;
     std::string p_sub_topic_;

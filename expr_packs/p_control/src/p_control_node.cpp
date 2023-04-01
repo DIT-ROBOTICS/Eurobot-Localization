@@ -15,12 +15,12 @@ int main(int argc, char** argv){
     }
     catch (const char* s) {
     	
-        ROS_FATAL_STREAM("[IMU DRIVE] : " << s);
+        ROS_FATAL_STREAM("[P_CONTROL] : " << s);
   	
     }
     catch (...)	{
     	
-        ROS_FATAL_STREAM("[IMU DRIVE] : Unexpected error");
+        ROS_FATAL_STREAM("[P_CONTROL] : Unexpected error");
 
     }
 

@@ -59,10 +59,10 @@ imu0_linear_acceleration_rejection_threshold: 1000000000000.0
 
 imu0_remove_gravitational_acceleration: false
 
-pose0: vive/data 
+pose0: lidar_bonbonbon
 pose0_config: [true, true, false,
               false, false, true,   
-              true, true, false,     # secure x., y. have accurate covariance matrix value
+              false, false, false,     # secure x., y. have accurate covariance matrix value
               false, false, false,
               false,  false,  false]
 pose0_queue_size: 50
@@ -78,6 +78,27 @@ initial_state: [0.0,   0.0,   0.0,
 
 publish_tf: true
 publish_acceleration: false # true->false
+
+pose1: vive_bonbonbon
+pose1_config: [true, true, false,
+             false, false, true,   
+             true, true, false,     # secure x., y. have accurate covariance matrix value
+             false, false, false,
+             false,  false,  false]
+pose1_queue_size: 50
+pose1_differential: false
+pose1_relative: false
+pose1_nodelay: true
+
+initial_state: [0.0,   0.0,   0.0,
+                0.0,   0.0,   0.0,
+                0.0,   0.0,   0.0,
+                0.0,   0.0,   0.0,
+                0.0,   0.0,   0.0]
+
+publish_tf: true
+publish_acceleration: false # true->false
+
 
 # control
 # acc_config: [x., y., z., r., p., y.]

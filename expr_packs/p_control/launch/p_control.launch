@@ -1,0 +1,17 @@
+<launch>
+
+    <node pkg="p_control" type="p_control_node" name="p_control_node" output="screen">
+        
+        <param name="active" value="true"/>
+        <param name="publish" value="true"/>
+        <param name="pose_topic" value="/global_filter"/>
+        <param name="pub_topic" value="/cmd_vel"/>
+        <param name="update_params" value="false"/>
+        <param name="goal_x" value="100.0"/>
+        <param name="goal_y" value="0.0"/>
+        <param name="max_linear_vel" value="0.3"/>
+        <param name="with_p_control" value="true"/>
+
+    </node>
+
+</launch>

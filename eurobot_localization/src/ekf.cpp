@@ -85,10 +85,12 @@ void Ekf::initialize()
 
     // for obstacle filtering
     nh_local_.param<double>("max_obstacle_distance", p_max_obstacle_distance_, 0.5);
+    nh_local_.param<double>("timer_frequency", p_timer_frequency_, 10);
 
     // for beacon piller detection
     if_new_obstacles_ = false;
     if_gps = false;
+    update_lidar_ = update_vive_ = false;
     beacon_from_scan_ = {};
 
     // for ros
@@ -97,16 +99,23 @@ void Ekf::initialize()
     imu_sub_ = nh_.subscribe("mpu6050_imu", 50, &Ekf::imuCallback, this);
     raw_obstacles_sub_ = nh_.subscribe("obstacles_to_base", 10, &Ekf::obstaclesCallback, this);
     gps_sub_ = nh_.subscribe("lidar_bonbonbon", 10, &Ekf::gpsCallback, this);
+    vive_sub_ = nh_.subscribe("vive_bonbonbon", 10, &Ekf::viveCallback, this);
     beacon_sub_ = nh_.subscribe("beacon_bonbonbon", 10, &Ekf::gpsCallback, this);
     ekf_pose_pub_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("ekf_pose", 10);
+    debug_pub_ = nh_.advertise<std_msgs::Float64>("ekf_debugger", 10);
     global_filter_pub_ = nh_.advertise<nav_msgs::Odometry>("ekf_pose_in_odom", 10);
     update_beacon_pub_ = nh_.advertise<obstacle_detector::Obstacles>("update_beacon", 10);
+    update_timer_ = nh_.createTimer(ros::Duration(1.0), &Ekf::updateTimerCallback, this, false, false);
 
     // for time calculate
     count_ = 0;
     duration_ = 0.0;
     first_cb = false;
     t_last = 0.0;
+
+    // Set timer period
+    update_timer_.setPeriod(ros::Duration(1 / p_timer_frequency_), false);
+    update_timer_.start();
 }
 
 void Ekf::predict_diff(double v, double w)
@@ -528,20 +537,115 @@ void Ekf::gpsCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& 
     double _, yaw;
     qt.getRPY(_, _, yaw);
 
-    gps_mu(0) = pose_msg->pose.pose.position.x;
-    gps_mu(1) = pose_msg->pose.pose.position.y;
-    gps_mu(2) = yaw;
+    lidar_state_.mu(0) = pose_msg->pose.pose.position.x;
+    lidar_state_.mu(1) = pose_msg->pose.pose.position.y;
+    lidar_state_.mu(2) = yaw;
 
-    gps_sigma(0, 0) = pose_msg->pose.covariance[0];   // x-x
-    gps_sigma(0, 1) = pose_msg->pose.covariance[1];   // x-y
-    gps_sigma(0, 2) = pose_msg->pose.covariance[5];   // x-theta
-    gps_sigma(1, 0) = pose_msg->pose.covariance[6];   // y-x
-    gps_sigma(1, 1) = pose_msg->pose.covariance[7];   // y-y
-    gps_sigma(1, 2) = pose_msg->pose.covariance[11];  // y-theta
-    gps_sigma(2, 0) = pose_msg->pose.covariance[30];  // theta-x
-    gps_sigma(2, 1) = pose_msg->pose.covariance[31];  // theta-y
-    gps_sigma(2, 2) = pose_msg->pose.covariance[35];  // theta-theta
-    if_gps = true;
+    lidar_state_.sigma(0, 0) = pose_msg->pose.covariance[0];   // x-x
+    lidar_state_.sigma(0, 1) = pose_msg->pose.covariance[1];   // x-y
+    lidar_state_.sigma(0, 2) = pose_msg->pose.covariance[5];   // x-theta
+    lidar_state_.sigma(1, 0) = pose_msg->pose.covariance[6];   // y-x
+    lidar_state_.sigma(1, 1) = pose_msg->pose.covariance[7];   // y-y
+    lidar_state_.sigma(1, 2) = pose_msg->pose.covariance[11];  // y-theta
+    lidar_state_.sigma(2, 0) = pose_msg->pose.covariance[30];  // theta-x
+    lidar_state_.sigma(2, 1) = pose_msg->pose.covariance[31];  // theta-y
+    lidar_state_.sigma(2, 2) = pose_msg->pose.covariance[35];  // theta-theta
+
+    update_lidar_ = true;
+}
+
+void Ekf::viveCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose_msg){
+
+    tf2::Quaternion q;
+    tf2::fromMsg(pose_msg->pose.pose.orientation, q);
+    tf2::Matrix3x3 qt(q);
+    double _, yaw;
+    qt.getRPY(_, _, yaw);
+
+    vive_state_.mu(0) = pose_msg->pose.pose.position.x;
+    vive_state_.mu(1) = pose_msg->pose.pose.position.y;
+    vive_state_.mu(2) = yaw;
+
+    vive_state_.sigma(0, 0) = pose_msg->pose.covariance[0];   // x-x
+    vive_state_.sigma(0, 1) = pose_msg->pose.covariance[1];   // x-y
+    vive_state_.sigma(0, 2) = pose_msg->pose.covariance[5];   // x-theta
+    vive_state_.sigma(1, 0) = pose_msg->pose.covariance[6];   // y-x
+    vive_state_.sigma(1, 1) = pose_msg->pose.covariance[7];   // y-y
+    vive_state_.sigma(1, 2) = pose_msg->pose.covariance[11];  // y-theta
+    vive_state_.sigma(2, 0) = pose_msg->pose.covariance[30];  // theta-x
+    vive_state_.sigma(2, 1) = pose_msg->pose.covariance[31];  // theta-y
+    vive_state_.sigma(2, 2) = pose_msg->pose.covariance[35];  // theta-theta
+
+    update_vive_ = true;
+}
+
+
+void Ekf::updateTimerCallback(const ros::TimerEvent &e){
+    
+    std_msgs::Float64 data;
+    data.data = offset_theta_;
+    debug_pub_.publish(data);
+
+    if(!(update_lidar_ || update_vive_)) return;
+
+    // Update the vive data and lidar data
+    if(update_lidar_){
+        gps_mu(0) = lidar_state_.mu(0);
+        gps_mu(1) = lidar_state_.mu(1);
+        gps_mu(2) = lidar_state_.mu(2);
+
+        gps_sigma(0, 0) = lidar_state_.sigma(0, 0);   // x-x
+        gps_sigma(0, 1) = lidar_state_.sigma(0, 1);   // x-y
+        gps_sigma(0, 2) = lidar_state_.sigma(0, 2);   // x-theta
+        gps_sigma(1, 0) = lidar_state_.sigma(1, 0);   // y-x
+        gps_sigma(1, 1) = lidar_state_.sigma(1, 1);   // y-y
+        gps_sigma(1, 2) = lidar_state_.sigma(1, 2);  // y-theta
+        gps_sigma(2, 0) = lidar_state_.sigma(2, 0);  // theta-x
+        gps_sigma(2, 1) = lidar_state_.sigma(2, 1);  // theta-y
+        gps_sigma(2, 2) = lidar_state_.sigma(2, 2);  // theta-theta
+    }
+    else if(update_vive_ && !update_lidar_){
+        gps_mu(0) = cos_theta_ * vive_state_.mu(0) - sin_theta_ * vive_state_.mu(1);
+        gps_mu(1) = sin_theta_ * vive_state_.mu(0) + cos_theta_ * vive_state_.mu(1);
+        gps_mu(2) = vive_state_.mu(2);
+
+        gps_sigma(0, 0) = vive_state_.sigma(0, 0);   // x-x
+        gps_sigma(0, 1) = vive_state_.sigma(0, 1);   // x-y
+        gps_sigma(0, 2) = vive_state_.sigma(0, 2);   // x-theta
+        gps_sigma(1, 0) = vive_state_.sigma(1, 0);   // y-x
+        gps_sigma(1, 1) = vive_state_.sigma(1, 1);   // y-y
+        gps_sigma(1, 2) = vive_state_.sigma(1, 2);  // y-theta
+        gps_sigma(2, 0) = vive_state_.sigma(2, 0);  // theta-x
+        gps_sigma(2, 1) = vive_state_.sigma(2, 1);  // theta-y
+        gps_sigma(2, 2) = vive_state_.sigma(2, 2);  // theta-theta
+    }
+    
+    if(update_lidar_ && update_vive_){
+        double theorem_x = lidar_state_.mu(0) - 1.5;
+        double theorem_y = lidar_state_.mu(1) - 1.;
+        double pratical_x = vive_state_.mu(0) - 1.5;
+        double pratical_y = vive_state_.mu(1) - 1.;
+        double denominator = (theorem_x * theorem_x + theorem_y * theorem_y);
+
+        cos_theta_ = (theorem_x * pratical_x + theorem_y * pratical_y) / (denominator);
+        sin_theta_ = (theorem_x * pratical_y - theorem_y * pratical_x) / (denominator);
+        
+		if(denominator == 0){                                                                                                               
+            cos_theta_ = 1;                                                                                                                 
+            sin_theta_ = 0;                                                                                                                 
+        }                                                                                                                                   
+        else{                                                                                                                               
+            cos_theta_ = (theorem_x * pratical_x + theorem_y * pratical_y) / (denominator);                                                 
+            sin_theta_ = (theorem_x * pratical_y - theorem_y * pratical_x) / (denominator);                                                 
+        } 
+
+        offset_theta_ = atan2(sin_theta_, cos_theta_);
+        // ROS_INFO_STREAM("[EKF] : current offset " << offset_theta_);
+    }
+    
+    if_gps = true;  
+
+    update_vive_ = update_lidar_ = false;
 }
 
 void Ekf::beaconCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose_msg)

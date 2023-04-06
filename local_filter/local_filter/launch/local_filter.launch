@@ -46,10 +46,10 @@
             <param name="goal_x" value="1.0"/>
             <param name="goal_y" value="0.0"/>
             <param name="goal_yaw" value="0.0"/>
-            <param name="goal_round" value="10.0"/>
+            <param name="goal_round" value="5.0"/>
             <param name="max_linear_vel" value="0.2"/>
-            <param name="max_angular_vel" value="1.2"/>
-            <param name="min_angular_vel" value="0.2"/>
+            <param name="max_angular_vel" value="0.6"/>
+            <param name="min_angular_vel" value="0.4"/>
             <param name="angular_accel" value="0.002"/>
             <param name="with_p_control" value="true"/>
             <param name="using_orientation_data" value="true"/>

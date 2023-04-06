@@ -201,50 +201,36 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
         std::cout << this->orientation_now_z_ << std::endl;
         std::cout << this->p_round_now_ << std::endl << "-----" << std::endl;
 
-        if(this->p_round_now_ < 1){
-            if(vel_output_.angular.z < p_max_angular_vel_){
+        if(this->p_round_now_ < 1.0){
+            if(vel_output_.angular.z < this->p_max_angular_vel_){
                 this->vel_output_.angular.z += 0.01;
             }
         }
 
-        if(this->p_round_now_ < (this->p_goal_round_+0.5) && this->p_round_now_ > (this->p_goal_round_-1)){
-            if( this->p_round_now_ < this->p_goal_round_){
-                if(fabs(this->vel_output_.angular.z) > this->p_min_angular_vel_){
-                    if(this->vel_output_.angular.z > 0.0){
-                        this->vel_output_.angular.z -= this->p_angular_accel_;
-                    }else{
-                        this->vel_output_.angular.z += this->p_angular_accel_;
-                    }
-                    if(fabs(this->orientation_now_z_) < 1.0){
-                        for(int i=0;i<30;i++){
-                            this->vel_output_.angular.z = 0.0;
-                        }
-                    }
-                }else if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
+        if(this->p_round_now_ == this->p_goal_round_-0.5 || this->p_round_now_ == this->p_goal_round_){
+
+            if(fabs(this->orientation_now_z_) <= 1){
+
+                for(int i=0;i<30;i++){
+                    this->vel_output_.angular.z = 0.0;
+                }
+
+            }else{
+
+                if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
+
                     if(this->vel_output_.angular.z > 0.0){
                         this->vel_output_.angular.z = this->p_min_angular_vel_;
                     }else{
                         this->vel_output_.angular.z = -this->p_min_angular_vel_;
                     }
-                    if(fabs(this->orientation_now_z_) < 1.0){
-                        for(int i=0;i<30;i++){
-                            this->vel_output_.angular.z = 0.0;
-                        }
-                    }
+                }else if(this->vel_output_.angular.z > 0.0){
+                    this->vel_output_.angular.z -= this->p_angular_accel_;
+                }else{
+                    this->vel_output_.angular.z += this->p_angular_accel_;
                 }
 
-                
-                 
-            
-               
-            }    
-            // else if(this->p_round_now_ == this->p_goal_round_-0.5 || this->p_round_now_ == this->p_goal_round_+0.5){
-            //     if(fabs(this->orientation_now_z_) < 1){
-            //         for(int i=0;i<30;i++){
-            //             this->vel_output_.angular.z = 0.0;
-            //         }
-            //     }
-            // }
+            }
         }
 
     }

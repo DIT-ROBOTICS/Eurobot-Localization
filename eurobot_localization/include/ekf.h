@@ -14,6 +14,7 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <std_msgs/Float64.h>
 #include <sensor_msgs/Imu.h>
 #include "obstacle_detector/Obstacles.h"
 
@@ -55,11 +56,13 @@ class Ekf
     void imuCallback(const sensor_msgs::Imu::ConstPtr& imu_msg);
     void obstaclesCallback(const obstacle_detector::Obstacles::ConstPtr& obstacle_msg);
     void gpsCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose_msg);
+    void viveCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose_msg);
     void beaconCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose_msg);
     void publishEkfPose(const ros::Time& stamp);
     void publishGlobalFilter(const ros::Time& stamp);
     void publishUpdateBeacon(const ros::Time& stamp);
     void broadcastEkfTransform(const nav_msgs::Odometry::ConstPtr& odom_msg);
+    void updateTimerCallback(const ros::TimerEvent &e);
 
     // for beacon position in map std::list<double>{ax, ay, bx, by, cx, cy}
     double p_beacon_ax_;
@@ -70,6 +73,9 @@ class Ekf
     double p_beacon_cy_;
     double p_beacon_dx_;
     double p_beacon_dy_;
+
+    // Timer frequency
+    double p_timer_frequency_;
 
     std::list<Eigen::Vector2d> beacon_in_map_;
 
@@ -83,11 +89,17 @@ class Ekf
     // for robot state
     Eigen::Vector3d mu_0_;
     RobotState robotstate_;
+    RobotState vive_state_;
+    RobotState lidar_state_;
     double p_odom_freq_;
     double imu_w;
     double dt_;
     double t_last;
     bool first_cb;
+
+    // Check update
+    bool update_lidar_;
+    bool update_vive_;
 
     // ekf parameter
     // motion covariance
@@ -115,6 +127,10 @@ class Ekf
     Eigen::Vector3d beacon_mu;
     Eigen::Matrix3d beacon_sigma;
 
+    double offset_theta_;
+    double cos_theta_;
+    double sin_theta_;
+
     // set minimum likelihood value
     double p_mini_likelihood_;
     double p_mini_likelihood_update_;
@@ -137,14 +153,20 @@ class Ekf
     ros::Subscriber imu_sub_;
     ros::Subscriber raw_obstacles_sub_;
     ros::Subscriber gps_sub_;
+    ros::Subscriber vive_sub_;
     ros::Subscriber beacon_sub_;
 
     // Publisher
     ros::Publisher ekf_pose_pub_;
+    ros::Publisher debug_pub_;
     tf2_ros::TransformBroadcaster br_;
+
     // for debug
     ros::Publisher update_beacon_pub_;
     ros::Publisher global_filter_pub_;
+
+    // Update timer
+    ros::Timer update_timer_;
 
     // for function time calculation
     int count_;

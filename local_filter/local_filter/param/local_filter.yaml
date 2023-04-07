@@ -3,14 +3,14 @@ silent_tf_failure: false
 sensor_timeout: 0.01
 two_d_mode: true
 
-smooth_lagged_data: false
+smooth_lagged_data: false # to deal with lagged data
 history_length: 0.4
 
 dynamic_process_noise_covariance: false
 
-predict_to_current_time: false
+predict_to_current_time: false # Why ?
 
-print_diagnostics: false
+print_diagnostics: false #  Why ?
 
 # debug 
 debug: false
@@ -31,43 +31,48 @@ transform_timeout: 0
 #          r.,  p.,  y.,
 #          x.., y.., z..]
 odom0: odom
-odom0_config: [false, false, false,
-               false, false, false,
-               true,  true,  false,
+# odom0_config: [false, false, false,
+#                false, false, false,
+#                true,  true,  false,
+#                false, false, true,
+#                false, false, false]
+odom0_config: [true,  true,  false,
                false, false, true,
+               false,  false,  false,
+               false, false, false,
                false, false, false]
 odom0_queue_size: 20
-odom0_differential: false
+odom0_differential: true
 odom0_relative: false
 odom0_nodelay: true
 
 odom0_twist_rejection_threshold: 100
 
-imu0: imu/data_cov
-imu0_config: [false, false, false,
-              false, false, false,
-              false, false, false,
-              false, false, true,
-              true,  true,  false]
-imu0_queue_size: 100
-imu0_differential: false
-imu0_relative: false
-imu0_nodelay: true
+# imu0: imu/data_cov
+# imu0_config: [false, false, false,
+#               false, false, false,
+#               false, false, false,
+#               false, false, false,
+#               false, false, false]
+# imu0_queue_size: 100
+# imu0_differential: false
+# imu0_relative: false
+# imu0_nodelay: true
 
-imu0_twist_rejection_threshold: 1000000000000.0
-imu0_linear_acceleration_rejection_threshold: 1000000000000.0
+# imu0_twist_rejection_threshold: 1000000000000.0
+# imu0_linear_acceleration_rejection_threshold: 1000000000000.0
 
-imu0_remove_gravitational_acceleration: false
+# imu0_remove_gravitational_acceleration: false
 
 
-initial_state: [0.0,  0.0,  0.0,
+initial_state: [0.0,   0.0,   0.0,
                 0.0,   0.0,   0.0,
                 0.0,   0.0,   0.0,
                 0.0,   0.0,   0.0,
                 0.0,   0.0,   0.0]
 
 publish_tf: true
-publish_acceleration: true
+publish_acceleration: false # true->false
 
 # control
 # acc_config: [x., y., z., r., p., y.]
@@ -108,7 +113,7 @@ initial_estimate_covariance: [0.01, 0,    0,    0,    0,    0,    0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,     0,     0,     0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9,  0,     0,     0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     1e-9,  0,     0,    0,    0,
-                              0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     1e-6,   0,    0,    0,
+                              0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     1e-6,  0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     1e-9, 0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    1e-9, 0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    1e-9]

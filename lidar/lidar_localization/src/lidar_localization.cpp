@@ -73,6 +73,7 @@ bool LidarLocalization::updateParams(std_srvs::Empty::Request& req, std_srvs::Em
   get_param_ok = nh_local_.param<double>("theta", p_theta_, 0);
 
   get_param_ok = nh_local_.param<string>("obstacle_topic", p_obstacle_topic_, "obstacles");
+  get_param_ok = nh_local_.param<string>("toposition_topic", p_toposition_topic_, "/Toposition");
   get_param_ok = nh_local_.param<string>("beacon_parent_frame_id", p_beacon_parent_frame_id_, "map");
   get_param_ok = nh_local_.param<string>("beacon_frame_id_prefix", p_beacon_frame_id_prefix_, "beacon");
   get_param_ok = nh_local_.param<string>("robot_parent_frame_id", p_robot_parent_frame_id_, "map");
@@ -83,6 +84,7 @@ bool LidarLocalization::updateParams(std_srvs::Empty::Request& req, std_srvs::Em
     if (p_active_)
     {
       sub_obstacles_ = nh_.subscribe(p_obstacle_topic_, 10, &LidarLocalization::obstacleCallback, this);
+      sub_toposition_ = nh_.subscribe(p_toposition_topic_, 10, &LidarLocalization::cmdvelCallback, this);
       pub_location_ = nh_.advertise<geometry_msgs::PoseWithCovarianceStamped>("lidar_bonbonbon", 10);
       pub_beacon_ = nh_.advertise<geometry_msgs::PoseArray>("beacons", 10);
     }
@@ -110,6 +112,15 @@ bool LidarLocalization::updateParams(std_srvs::Empty::Request& req, std_srvs::Em
   getBeacontoMap();
 
   return true;
+}
+
+void LidarLocalization::cmdvelCallback(const geometry_msgs::Twist::ConstPtr& ptr)
+{
+
+  robot_to_map_vel_.x = ptr->linear.x;
+  robot_to_map_vel_.y = ptr->linear.y;
+  robot_to_map_vel_.z = ptr->angular.z;  
+
 }
 
 void LidarLocalization::obstacleCallback(const obstacle_detector::Obstacles::ConstPtr& ptr)
@@ -278,8 +289,20 @@ void LidarLocalization::getBeacontoRobot()
         double x = transform.transform.translation.x;
         double y = transform.transform.translation.y;
         double beacon_to_robot_theta = std::atan2(y, x);
-        beacon_to_robot_[i - 1].x = x + robot_to_map_vel_.z * std::cos(beacon_to_robot_theta) * (timeAfter - timeBefore);
-        beacon_to_robot_[i - 1].y = y + robot_to_map_vel_.z * std::sin(beacon_to_robot_theta) * (timeAfter - timeBefore);
+
+        double beacon_velocity[2];                                                                                                          
+        double radius = sqrt(x * x + y * y);                                                                                                
+        beacon_velocity[0] = -robot_to_map_vel_.x - robot_to_map_vel_.z * radius * sin(beacon_to_robot_theta);                              
+        beacon_velocity[1] = -robot_to_map_vel_.y - robot_to_map_vel_.z * radius * cos(beacon_to_robot_theta);                              
+                                                                                                                                            
+        ROS_INFO_STREAM("[LIDAR] : id" << i << " beacon velocity (x, y) (" << beacon_velocity[0] << ", " << beacon_velocity[1] <<           
+                "), beacon predict velocity (x, y) (" << beacon_velocity_[i - 1].x << ", "                                                  
+                << beacon_velocity_[i - 1].y << ")");                                                                                       
+                                                                                                                                            
+        double gain = 0.2;                                                                                                                  
+                                                                                                                                            
+        beacon_to_robot_[i - 1].x = x + gain * beacon_velocity[0] * (timeAfter - timeBefore);                                               
+        beacon_to_robot_[i - 1].y = y + gain * beacon_velocity[1] * (timeAfter - timeBefore);    
       }
       broadcastBeacon();
     }

@@ -29,10 +29,10 @@
         </include>
 
         <!-- IMU firmware and covariance feedback loop node (contain IMU spatial launch) -->
-        <!-- <include file="$(find imu_drive)/launch/imu_drive_firm.launch">
+        <include file="$(find imu_drive)/launch/imu_drive_firm.launch">
             <arg name="robot_name" value="$(arg robot_name)"/>
             <arg name="robot_name_slash" value="$(arg robot_name_slash)"/>
-        </include> -->
+        </include>
 
         <!-- P_control test -->
         

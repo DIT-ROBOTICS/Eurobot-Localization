@@ -5,6 +5,8 @@
 // #include <tf2>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/PointStamped.h>
 #include <tf2/LinearMath/Transform.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 // for matrix calculate
@@ -33,7 +35,7 @@ class Ekf
   private:
     // ekf
     void predict_diff(double v, double w);
-    void predict_omni(double v_x, double v_y, double w);
+    void predict_omni(double v_x, double v_y, double w, double dt);
     void update_landmark();
     void update_gps(Eigen::Vector3d gps_pose, Eigen::Matrix3d gps_cov);
 
@@ -128,8 +130,8 @@ class Ekf
     Eigen::Matrix3d beacon_sigma;
 
     double offset_theta_;
-    double cos_theta_;
-    double sin_theta_;
+    double cos_theta_, prev_cos_theta_;
+    double sin_theta_, prev_sin_theta_;
 
     // set minimum likelihood value
     double p_mini_likelihood_;
@@ -141,6 +143,9 @@ class Ekf
     double p_initial_x_;
     double p_initial_y_;
     double p_initial_theta_deg_;
+    double p_offset_lpf_gain_;
+
+    double p_velocity_lpf_gain_;
 
     // ros node
     ros::NodeHandle nh_;
@@ -164,6 +169,7 @@ class Ekf
     // for debug
     ros::Publisher update_beacon_pub_;
     ros::Publisher global_filter_pub_;
+    tf2_ros::Buffer tfBuffer;
 
     // Update timer
     ros::Timer update_timer_;

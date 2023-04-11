@@ -23,6 +23,8 @@
  */
 
 #include "ekf.h"
+#include "geometry_msgs/Twist.h"
+#include "geometry_msgs/TwistWithCovariance.h"
 #include "nav_msgs/Odometry.h"
 using namespace std;
 
@@ -86,6 +88,8 @@ void Ekf::initialize()
     // for obstacle filtering
     nh_local_.param<double>("max_obstacle_distance", p_max_obstacle_distance_, 0.5);
     nh_local_.param<double>("timer_frequency", p_timer_frequency_, 10);
+    nh_local_.param<double>("offset_lpf_gain", p_offset_lpf_gain_, 0.5);
+    nh_local_.param<double>("velocity_lpf_gain", p_velocity_lpf_gain_, 0.5);
 
     // for beacon piller detection
     if_new_obstacles_ = false;
@@ -96,7 +100,7 @@ void Ekf::initialize()
     // for ros
     setpose_sub_ = nh_.subscribe("initialpose", 50, &Ekf::setposeCallback, this);
     odom_sub_ = nh_.subscribe("odom", 50, &Ekf::odomCallback, this);
-    imu_sub_ = nh_.subscribe("mpu6050_imu", 50, &Ekf::imuCallback, this);
+    imu_sub_ = nh_.subscribe("imu/data_cov", 50, &Ekf::imuCallback, this);
     raw_obstacles_sub_ = nh_.subscribe("obstacles_to_base", 10, &Ekf::obstaclesCallback, this);
     gps_sub_ = nh_.subscribe("lidar_bonbonbon", 10, &Ekf::gpsCallback, this);
     vive_sub_ = nh_.subscribe("vive_bonbonbon", 10, &Ekf::viveCallback, this);
@@ -153,12 +157,22 @@ void Ekf::predict_diff(double v, double w)
     robotstate_.sigma = G * robotstate_.sigma * G.transpose() + V * M * V.transpose();
 }
 
-void Ekf::predict_omni(double v_x, double v_y, double w)
+void Ekf::predict_omni(double v_x, double v_y, double w, double dt)
 {
     // TODO ekf predict function for omni
-    double d_x = v_x / p_odom_freq_;
-    double d_y = v_y / p_odom_freq_;
-    double d_theta = w / p_odom_freq_;
+    double d_x;
+    double d_y;
+    double d_theta;
+    if(dt == 0){
+        d_x = v_x / p_odom_freq_;
+        d_y = v_y / p_odom_freq_;
+        d_theta = w / p_odom_freq_;
+    }
+    else{
+        d_x = v_x * dt;
+        d_y = v_y * dt;
+        d_theta = w * dt;
+    }
     double theta = robotstate_.mu(2);
     double theta_ = theta + d_theta / 2;
     double s_theta = sin(theta);
@@ -507,7 +521,7 @@ void Ekf::odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg)
     // clock_gettime(CLOCK_REALTIME, &tt1);
 
     // predict_diff(v_x, w);
-    predict_omni(v_x, v_y, w);
+    predict_omni(v_x, v_y, w, dt_);
     // predict_omni(v_x, v_y, imu_w);
     // ROS_INFO("Predict_omni = %f %f %f", robotstate_.mu(0), robotstate_.mu(1), robotstate_.mu(2));
     update_landmark();
@@ -556,8 +570,27 @@ void Ekf::gpsCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& 
 
 void Ekf::viveCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pose_msg){
 
+    static tf2_ros::TransformListener tfListener(tfBuffer);
+
+    // Get TF transform from vive to map
+    geometry_msgs::TransformStamped transformStamped;
+    try{
+        transformStamped = tfBuffer.lookupTransform("robot1/base_footprint", "robot1/vive_frame", ros::Time(0));
+    }
+    catch (tf2::TransformException &ex) {
+        ROS_WARN("%s", ex.what());
+        return;
+    }
+
+    geometry_msgs::PoseStamped vive_to_map;
+    geometry_msgs::PoseStamped base_to_map;
+    vive_to_map.header.frame_id = "robot1/vive_frame";
+    vive_to_map.header.stamp = pose_msg->header.stamp;
+    vive_to_map.pose = pose_msg->pose.pose;
+    tf2::doTransform(vive_to_map, base_to_map, transformStamped);
+
     tf2::Quaternion q;
-    tf2::fromMsg(pose_msg->pose.pose.orientation, q);
+    tf2::fromMsg(base_to_map.pose.orientation, q);
     tf2::Matrix3x3 qt(q);
     double _, yaw;
     qt.getRPY(_, _, yaw);
@@ -605,8 +638,8 @@ void Ekf::updateTimerCallback(const ros::TimerEvent &e){
         gps_sigma(2, 2) = lidar_state_.sigma(2, 2);  // theta-theta
     }
     else if(update_vive_ && !update_lidar_){
-        gps_mu(0) = cos_theta_ * vive_state_.mu(0) - sin_theta_ * vive_state_.mu(1);
-        gps_mu(1) = sin_theta_ * vive_state_.mu(0) + cos_theta_ * vive_state_.mu(1);
+        gps_mu(0) = cos_theta_ * (vive_state_.mu(0) - 1.5) - sin_theta_ * (vive_state_.mu(1) - 1.0) + 1.5;
+        gps_mu(1) = sin_theta_ * (vive_state_.mu(0) - 1.5) + cos_theta_ * (vive_state_.mu(1) - 1.0) + 1.0;
         gps_mu(2) = vive_state_.mu(2);
 
         gps_sigma(0, 0) = vive_state_.sigma(0, 0);   // x-x
@@ -629,15 +662,18 @@ void Ekf::updateTimerCallback(const ros::TimerEvent &e){
 
         cos_theta_ = (theorem_x * pratical_x + theorem_y * pratical_y) / (denominator);
         sin_theta_ = (theorem_x * pratical_y - theorem_y * pratical_x) / (denominator);
-        
-		if(denominator == 0){                                                                                                               
-            cos_theta_ = 1;                                                                                                                 
-            sin_theta_ = 0;                                                                                                                 
-        }                                                                                                                                   
-        else{                                                                                                                               
-            cos_theta_ = (theorem_x * pratical_x + theorem_y * pratical_y) / (denominator);                                                 
-            sin_theta_ = (theorem_x * pratical_y - theorem_y * pratical_x) / (denominator);                                                 
-        } 
+
+        if(denominator == 0){
+            cos_theta_ = 1;
+            sin_theta_ = 0; 
+        }
+        else{
+            cos_theta_ = (theorem_x * pratical_x + theorem_y * pratical_y) / (denominator);
+            sin_theta_ = (theorem_x * pratical_y - theorem_y * pratical_x) / (denominator);
+        }
+
+        cos_theta_ = cos_theta_ * p_offset_lpf_gain_ + prev_cos_theta_ * (1 - p_offset_lpf_gain_);
+        sin_theta_ = sin_theta_ * p_offset_lpf_gain_ + prev_sin_theta_ * (1 - p_offset_lpf_gain_);
 
         offset_theta_ = atan2(sin_theta_, cos_theta_);
         // ROS_INFO_STREAM("[EKF] : current offset " << offset_theta_);
@@ -736,6 +772,9 @@ void Ekf::publishEkfPose(const ros::Time& stamp)
 
 void Ekf::publishGlobalFilter(const ros::Time& stamp)
 {
+    static RobotState prev_robot_state;
+    static geometry_msgs::Twist prev_velocity;
+
     nav_msgs::Odometry ekf_pose;
     ekf_pose.header.stamp = stamp;
     ekf_pose.header.frame_id = p_robot_name_ + "map";
@@ -756,6 +795,19 @@ void Ekf::publishGlobalFilter(const ros::Time& stamp)
     ekf_pose.pose.covariance[30] = robotstate_.sigma(2, 0);  // theta-x
     ekf_pose.pose.covariance[31] = robotstate_.sigma(2, 1);  // theta-y
     ekf_pose.pose.covariance[35] = robotstate_.sigma(2, 2);  // theta-theta
+
+    ekf_pose.twist.twist.linear.x = ((robotstate_.mu(0) - prev_robot_state.mu(0)) / 0.01) * p_velocity_lpf_gain_
+        + prev_velocity.linear.x * (1 - p_velocity_lpf_gain_);
+
+    ekf_pose.twist.twist.linear.y = ((robotstate_.mu(1) - prev_robot_state.mu(1)) / 0.01) * p_velocity_lpf_gain_
+        + prev_velocity.linear.y * (1 - p_velocity_lpf_gain_);
+
+    ekf_pose.twist.twist.angular.z = ((robotstate_.mu(2) - prev_robot_state.mu(2)) / 0.01) * p_velocity_lpf_gain_
+        + prev_velocity.angular.z * (1 - p_velocity_lpf_gain_);
+	
+    prev_robot_state = robotstate_;
+    prev_velocity = ekf_pose.twist.twist;
+
     global_filter_pub_.publish(ekf_pose);
 }
 

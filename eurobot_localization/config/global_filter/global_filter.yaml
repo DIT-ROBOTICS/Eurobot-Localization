@@ -1,11 +1,11 @@
-beacon_ax: 0.05885
-beacon_ay: -0.1182
+beacon_ax: 0.05
+beacon_ay: -0.094
 
-beacon_bx: 2.935
-beacon_by: -0.09771
+beacon_bx: 2.95
+beacon_by: -0.094
 
-beacon_cx: 1.508
-beacon_cy: 2.09646
+beacon_cx: 1.5
+beacon_cy: 2.094
 
 odom_freq: 100
 # initial pose
@@ -46,3 +46,4 @@ mini_likelihood_update: 0.1
 max_obstacle_distance: 0.5
 
 timer_frequency: 10
+velocity_lpf_gain: 0.5

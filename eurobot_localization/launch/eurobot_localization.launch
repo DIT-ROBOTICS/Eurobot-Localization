@@ -1,8 +1,8 @@
 <launch>
 
 
-	<arg name="robot_name" default="robot1"/>
-	<arg name="robot_name_slash" default="robot1/"/>
+	<arg name="robot_name" default="robot2"/>
+	<arg name="robot_name_slash" default="robot2/"/>
 
 	<include file="$(find local_filter)/launch/local_filter.launch">
 		<arg name="robot_name" value="$(arg robot_name)"/>

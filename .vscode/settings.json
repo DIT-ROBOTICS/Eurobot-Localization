@@ -1,0 +1,7 @@
+{
+    "cmake.sourceDirectory": "${workspaceFolder}/local_filter/odometry/odometry",
+    "files.associations": {
+        "cmath": "cpp",
+        "complex": "cpp"
+    }
+}

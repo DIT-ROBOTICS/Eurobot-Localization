@@ -1,0 +1,89 @@
+<launch>
+
+    <arg name="robot_name" default="robot1"/>
+	<arg name="robot_name_slash" default="robot1/"/>
+
+
+    <group ns="$(arg robot_name)">
+
+        <node pkg="robot_localization" type="ekf_localization_node" name="ekf_velocity_odom" clear_params="true">
+            <!-- <param name="tf_prefix" value="Tera" /> -->
+            <rosparam command="load" file="$(find local_filter_test)/param/local_filter_test_odom.yaml" />
+            <remap from="odometry/filtered" to="test_odom" />
+            <remap from="set_pose" to="initialpose" />
+            <remap from="/diagnostics" to="~diagnostics" />
+            <remap from="/odom" to="$(arg robot_name)/odom"/>
+
+            <param name="map_frame" value="$(arg robot_name)/map"/>
+            <param name="odom_frame" value="$(arg robot_name)/odom"/>
+            <param name="base_link_frame" value="$(arg robot_name)/base_footprint"/>
+            <param name="world_frame" value="$(arg robot_name)/odom"/>
+        </node>
+
+         <node pkg="robot_localization" type="ekf_localization_node" name="ekf_velocity_imu" clear_params="true">
+            <!-- <param name="tf_prefix" value="Tera" /> -->
+            <rosparam command="load" file="$(find local_filter_test)/param/local_filter_test_imu.yaml" />
+            <remap from="odometry/filtered" to="test_imu" />
+            <remap from="set_pose" to="initialpose" />
+            <remap from="/diagnostics" to="~diagnostics" />
+            <remap from="/imu/data_cov" to="/$(arg robot_name)/imu/data_cov"/>
+
+            <param name="map_frame" value="$(arg robot_name)/map"/>
+            <param name="odom_frame" value="$(arg robot_name)/odom"/>
+            <param name="base_link_frame" value="$(arg robot_name)/base_footprint"/>
+            <param name="world_frame" value="$(arg robot_name)/odom"/>
+        </node>
+       
+        <node pkg="robot_localization" type="ekf_localization_node" name="ekf_velocity_all" clear_params="true">
+            <!-- <param name="tf_prefix" value="Tera" /> -->
+            <rosparam command="load" file="$(find local_filter_test)/param/local_filter_test_all.yaml" />
+            <remap from="odometry/filtered" to="test_all" />
+            <remap from="set_pose" to="initialpose" />
+            <remap from="/diagnostics" to="~diagnostics" />
+            <remap from="/odom" to="$(arg robot_name)/odom"/>
+            <remap from="/imu/data_cov" to="/$(arg robot_name)/imu/data_cov"/>
+
+            <param name="map_frame" value="$(arg robot_name)/map"/>
+            <param name="odom_frame" value="$(arg robot_name)/odom"/>
+            <param name="base_link_frame" value="$(arg robot_name)/base_footprint"/>
+            <param name="world_frame" value="$(arg robot_name)/odom"/>
+        </node>
+
+        <!-- Odometry firmware and covariance feedback loop node (contain communication) -->
+        <include file="$(find odometry)/launch/odometry_comm.launch">
+            <arg name="robot_name" value="$(arg robot_name)"/>
+            <arg name="robot_name_slash" value="$(arg robot_name_slash)"/>
+        </include>
+
+        <!-- IMU firmware and covariance feedback loop node (contain IMU spatial launch) -->
+        <!-- <include file="$(find imu_drive)/launch/imu_drive_firm.launch">
+            <arg name="robot_name" value="$(arg robot_name)"/>
+            <arg name="robot_name_slash" value="$(arg robot_name_slash)"/>
+        </include> -->
+
+    </group>
+
+    <!-- P_control test -->
+        
+    <node pkg="p_control" type="p_control_node" name="p_control_node" output="screen">
+        <param name="active" value="true"/>
+        <param name="publish" value="true"/>
+        <param name="sub_topic" value="/$(arg robot_name)/test_all"/>
+        <param name="pub_topic" value="/$(arg robot_name)/cmd_vel"/>
+        <param name="update_params" value="false"/>
+        <param name="goal_x" value="1.0"/>
+        <param name="goal_y" value="0.0"/>
+        <param name="goal_yaw" value="0.0"/>
+        <param name="goal_round" value="5.0"/>
+        <param name="max_linear_vel" value="0.2"/>
+        <param name="max_angular_vel" value="0.6"/>
+        <param name="min_angular_vel" value="0.4"/>
+        <param name="angular_accel" value="0.002"/>
+        <param name="with_p_control" value="true"/>
+        <param name="using_orientation_data" value="true"/>
+        <param name="using_linear_data" value="false"/>
+    </node>
+
+    <node pkg="local_filter_test" type="getYaw" name="getYaw" output="screen"/>
+
+</launch>

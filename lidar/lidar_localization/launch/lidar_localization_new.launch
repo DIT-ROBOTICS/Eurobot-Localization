@@ -5,12 +5,8 @@
 
     <group ns="$(arg robot_name)">
 
-<<<<<<< HEAD
-        <node name="base_link_to_laser" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0.52 0 0 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)laser_frame" />
-=======
         <node name="base_link_to_laser" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0.999 0.035 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)laser_frame" />
         <node name="base_link_to_vive" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0.999 0.035 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)vive_frame" />
->>>>>>> 2b3bd85907a844c30c9a911181013b941a045ee2
 
 
         <!-- lidar localization -->

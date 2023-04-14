@@ -106,12 +106,12 @@ bool AreaObstaclesExtractor::updateParams(std_srvs::Empty::Request& req, std_srv
   {
     if (p_active_)
     {
-      sub_obstacles_ = nh_.subscribe("obstacles_to_base", 10, &AreaObstaclesExtractor::obstacleCallback, this);
+      sub_obstacles_ = nh_.subscribe("obstacles_to_map", 10, &AreaObstaclesExtractor::obstacleCallback, this);
       pub_obstacles_array_ = nh_.advertise<obstacle_detector::Obstacles>("obstacle_array", 10);
       if(p_central_) {
         sub_ally_obstacles_ = nh_.subscribe(p_ally_obstacles_topic_, 10, &AreaObstaclesExtractor::allyObstacleCallback, this);  
         sub_robot_pose_ = nh_.subscribe("robot_pose", 10, &AreaObstaclesExtractor::robotPoseCallback, this);
-        sub_ally_robot_pose_ = nh_.subscribe("ally_pose", 10, &AreaObstaclesExtractor::robotPoseCallback, this);
+        sub_ally_robot_pose_ = nh_.subscribe("ally_pose", 10, &AreaObstaclesExtractor::allyRobotPoseCallback, this);
         pub_have_obstacles_ = nh_.advertise<std_msgs::Bool>("have_obstacles", 10);
         pub_marker_ = nh_.advertise<visualization_msgs::MarkerArray>("obstacle_marker", 10);
       }
@@ -167,10 +167,10 @@ void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles
 
 
     // Check obstacle boundary
-    if (checkBoundary(obstacle_to_map.point))
+    if (checkBoundary(obstacle_to_base.point))
     {
       obstacle_detector::CircleObstacle circle_msg;
-      circle_msg.center = obstacle_to_map.point;
+      circle_msg.center = circle.center;
       circle_msg.velocity = circle.velocity;
       circle_msg.radius = circle.radius;
       circle_msg.true_radius = circle.true_radius;

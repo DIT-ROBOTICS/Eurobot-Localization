@@ -56,10 +56,10 @@
         </include>
 
         <!-- IMU firmware and covariance feedback loop node (contain IMU spatial launch) -->
-        <!-- <include file="$(find imu_drive)/launch/imu_drive_firm.launch">
+        <include file="$(find imu_drive)/launch/imu_drive_firm.launch">
             <arg name="robot_name" value="$(arg robot_name)"/>
             <arg name="robot_name_slash" value="$(arg robot_name_slash)"/>
-        </include> -->
+        </include>
 
     </group>
 
@@ -85,5 +85,14 @@
     </node>
 
     <node pkg="local_filter_test" type="getYaw" name="getYaw" output="screen"/>
+
+    <node pkg="rosserial_server" type="serial_node" name="rosserial_server_dp1" output="screen">
+        <param name="port" value="/dev/USB2" />
+        <param name="baud" value="115200" />
+        <rosparam>
+            require:
+                subscribers: [ lightgate ]
+        </rosparam>
+    </node>
 
 </launch>

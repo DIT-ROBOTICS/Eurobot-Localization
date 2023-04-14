@@ -27,7 +27,7 @@ private :
     /* Function - for twist callback */
     void PoseCallback(const nav_msgs::Odometry::ConstPtr &msg);
 
-    void LightGateCallback(const std_msgs::Bool::ConstPtr &msg_);
+    void LightGateCallback(const std_msgs::Bool::ConstPtr &msg1);
 
     /* Function publish sth we need */
     void publish();
@@ -64,9 +64,10 @@ private :
     bool p_with_p_control_;
     bool p_using_orientation_data_;
     bool p_using_linear_data_;
-    bool if_first =1;
-    bool p_or_n;
-    bool p_or_n_last;
+    // bool if_first =1;
+    bool p_or_n = 1;
+    bool p_or_n_last = 1;
+    bool if_trigger_;
 
     std::string p_pub_topic_;
     std::string p_sub_topic_;
@@ -74,6 +75,5 @@ private :
 
     /** -- Msgs to pub -- **/
     geometry_msgs::Twist vel_output_;
-    std_msgs::Bool if_trigger_;
 
 };

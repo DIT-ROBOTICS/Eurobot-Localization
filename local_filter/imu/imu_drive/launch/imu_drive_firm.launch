@@ -5,10 +5,10 @@
     <arg name="expr" value="1"/>
 
     <!-- Open imu firmware -->
-    <!-- <include file="$(find imu_drive)/launch/spatial.launch">
+    <include file="$(find imu_drive)/launch/spatial.launch">
 		<arg name="robot_name" value="$(arg robot_name)"/>        
         <arg name="robot_name_slash" value="$(arg robot_name_slash)"/> 
-    </include> -->
+    </include>
 
     <group ns="$(arg robot_name)">
 

@@ -10,7 +10,7 @@
         <node pkg="robot_localization" type="ekf_localization_node" name="ekf_velocity" clear_params="true">
             <!-- <param name="tf_prefix" value="Tera" /> -->
             <rosparam command="load" file="$(find local_filter)/param/local_filter.yaml" />
-            <remap from="odometry/filtered" to="global_filter" />
+            <remap from="odometry/filtered" to="/ekf_pose_in_odom" />
             <remap from="set_pose" to="initialpose" />
             <remap from="/diagnostics" to="~diagnostics" />
             <remap from="/odom" to="$(arg robot_name)/odom"/>
@@ -40,7 +40,7 @@
     <node pkg="p_control" type="p_control_node" name="p_control_node" output="screen">
             <param name="active" value="true"/>
             <param name="publish" value="true"/>
-            <param name="sub_topic" value="/$(arg robot_name)/global_filter"/>
+            <param name="sub_topic" value="/ekf_pose_in_odom"/>
             <param name="pub_topic" value="/$(arg robot_name)/cmd_vel"/>
             <param name="update_params" value="false"/>
             <param name="goal_x" value="1.0"/>

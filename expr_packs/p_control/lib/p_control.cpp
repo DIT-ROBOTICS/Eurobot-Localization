@@ -106,7 +106,7 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
             ROS_INFO_STREAM("[P CONTROL] : active node");
             this->pose_sub_ = nh_.subscribe(p_sub_topic_, 10, &P_control::PoseCallback, this);
-            this->lightgate_sub_ = nh_.subscribe(p_sub_topic_2_, 10, &P_control::LightGateCallback, this);
+            this->lightgate_sub_ = nh_.subscribe<std_msgs::Bool>(p_sub_topic_2_, 10, &P_control::LightGateCallback, this);
             this->vel_pub_ = nh_.advertise<geometry_msgs::Twist>(p_pub_topic_, 10);
 
             if(this->p_update_params_){
@@ -179,31 +179,40 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
         tf::quaternionMsgToTF(msg->pose.pose.orientation, q);
         this->orientation_now_z_ = tf::getYaw(q) * 180 / M_PI;
 
-        if(if_first){
-            if(this->orientation_now_z_ > 0){
-                p_or_n_last = 1;
-                p_or_n = 1;
-            }else{
-                p_or_n_last = 0;
-                p_or_n = 0;
-            }
-            if_first = 0;
-            this->p_round_now_ = -0.5;
-        }else{
-            p_or_n_last = p_or_n;
-        }
+        // if(if_first){
+        //     if(this->orientation_now_z_ > 0){
+        //         p_or_n_last = 1;
+        //         p_or_n = 1;
+        //     }else{
+        //         p_or_n_last = 0;
+        //         p_or_n = 0;
+        //     }
+        //     if_first = 0;
+        //     this->p_round_now_ = -0.5;
+        // }else{
+        //     p_or_n_last = p_or_n;
+        // }
 
-        if(this->orientation_now_z_ > 0){
-            p_or_n = 1;
-        }else{
-            p_or_n = 0;
-        }
+        // if(this->orientation_now_z_ > 0){
+        //     p_or_n = 1;
+        // }else{
+        //     p_or_n = 0;
+        // }
 
-        if(p_or_n != p_or_n_last){
-            this->p_round_now_ += 0.5;
-        }  
+        // if(p_or_n != p_or_n_last){
+        //     this->p_round_now_ += 0.5;
+        // }  
         
+        p_or_n_last = p_or_n;
+
+        p_or_n = this->if_trigger_;
+
+        if(p_or_n - p_or_n_last == 1){
+            this->p_round_now_ += 1.0;
+        } 
+
         std::cout << this->orientation_now_z_ << std::endl;
+        std::cout << this->if_trigger_ << std::endl;
         std::cout << this->p_round_now_ << std::endl << "-----" << std::endl;
 
         if(this->p_round_now_ < 1.0){
@@ -240,9 +249,9 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
 
     // }
 
-    if(this->p_round_now_ == this->p_goal_round_-0.5 || this->p_round_now_ == this->p_goal_round_){
+    if(this->p_round_now_ == this->p_goal_round_- 1.0 || this->p_round_now_ == this->p_goal_round_){
 
-        if(this->if_trigger_.data == 1){
+        if(this->p_round_now_ == this->p_goal_round_ && this->if_trigger_ == 1){
 
             for(int i=0;i<30;i++){
                 this->vel_output_.angular.z = 0.0;
@@ -282,8 +291,9 @@ void P_control::publish(){
 
 }
 
-void P_control::LightGateCallback(const std_msgs::Bool::ConstPtr &msg_){
+void P_control::LightGateCallback(const std_msgs::Bool::ConstPtr &msg1){
 
-    this->if_trigger_.data = msg_->data;
+    this->if_trigger_ = msg1->data;
+    // std::cout << this->if_trigger_ << std::endl;
 
 }

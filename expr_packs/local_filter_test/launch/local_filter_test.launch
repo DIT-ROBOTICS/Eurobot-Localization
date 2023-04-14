@@ -70,6 +70,7 @@
         <param name="publish" value="true"/>
         <param name="sub_topic" value="/$(arg robot_name)/test_all"/>
         <param name="pub_topic" value="/$(arg robot_name)/cmd_vel"/>
+        <param name="sub_topic_2" value="/lightgate"/>
         <param name="update_params" value="false"/>
         <param name="goal_x" value="1.0"/>
         <param name="goal_y" value="0.0"/>

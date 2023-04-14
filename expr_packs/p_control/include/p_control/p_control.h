@@ -8,7 +8,7 @@
 #include <geometry_msgs/Quaternion.h>
 #include <tf/tf.h>
 #include <cmath>
-#include <eigen3/Eigen/Dense>
+#include "std_msgs/Bool.h"
 
 class P_control {
 
@@ -27,6 +27,8 @@ private :
     /* Function - for twist callback */
     void PoseCallback(const nav_msgs::Odometry::ConstPtr &msg);
 
+    void LightGateCallback(const std_msgs::Bool::ConstPtr &msg_);
+
     /* Function publish sth we need */
     void publish();
 
@@ -36,7 +38,7 @@ private :
 
     /** -- Advertise -- **/
     ros::Subscriber pose_sub_;
-    ros::Subscriber quaternion_sub_;
+    ros::Subscriber lightgate_sub_;
 	ros::Publisher vel_pub_;
     ros::ServiceServer param_srv_; // Service for update param ( call by other nodes )
 
@@ -68,8 +70,10 @@ private :
 
     std::string p_pub_topic_;
     std::string p_sub_topic_;
+    std::string p_sub_topic_2_;
 
     /** -- Msgs to pub -- **/
     geometry_msgs::Twist vel_output_;
+    std_msgs::Bool if_trigger_;
 
 };

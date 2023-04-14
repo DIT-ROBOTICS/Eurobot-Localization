@@ -40,6 +40,10 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
         ROS_INFO_STREAM("[P CONTROL] : Current subscribe topic [ " << p_sub_topic_ << " ]"); 
     }
 
+    if(this->nh_local_.param<std::string>("sub_topic_2", p_sub_topic_2_, "/lightgate")){
+        ROS_INFO_STREAM("[P CONTROL] : Current subscribe topic [ " << p_sub_topic_2_ << " ]"); 
+    }
+
     if(this->nh_local_.param<std::string>("pub_topic", p_pub_topic_, "/cmd_vel")){
         ROS_INFO_STREAM("[P CONTROL] : Current publish topic [ " << p_pub_topic_ << " ]"); 
     }
@@ -102,6 +106,7 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
             ROS_INFO_STREAM("[P CONTROL] : active node");
             this->pose_sub_ = nh_.subscribe(p_sub_topic_, 10, &P_control::PoseCallback, this);
+            this->lightgate_sub_ = nh_.subscribe(p_sub_topic_2_, 10, &P_control::LightGateCallback, this);
             this->vel_pub_ = nh_.advertise<geometry_msgs::Twist>(p_pub_topic_, 10);
 
             if(this->p_update_params_){
@@ -207,32 +212,63 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
             }
         }
 
-        if(this->p_round_now_ == this->p_goal_round_-0.5 || this->p_round_now_ == this->p_goal_round_){
+    //     if(this->p_round_now_ == this->p_goal_round_-0.5 || this->p_round_now_ == this->p_goal_round_){
 
-            if(fabs(this->orientation_now_z_) <= 1){
+    //         if(fabs(this->orientation_now_z_) <= 1){
 
-                for(int i=0;i<30;i++){
-                    this->vel_output_.angular.z = 0.0;
-                }
+    //             for(int i=0;i<30;i++){
+    //                 this->vel_output_.angular.z = 0.0;
+    //             }
 
-            }else{
+    //         }else{
 
-                if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
+    //             if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
 
-                    if(this->vel_output_.angular.z > 0.0){
-                        this->vel_output_.angular.z = this->p_min_angular_vel_;
-                    }else{
-                        this->vel_output_.angular.z = -this->p_min_angular_vel_;
-                    }
-                }else if(this->vel_output_.angular.z > 0.0){
-                    this->vel_output_.angular.z -= this->p_angular_accel_;
-                }else{
-                    this->vel_output_.angular.z += this->p_angular_accel_;
-                }
+    //                 if(this->vel_output_.angular.z > 0.0){
+    //                     this->vel_output_.angular.z = this->p_min_angular_vel_;
+    //                 }else{
+    //                     this->vel_output_.angular.z = -this->p_min_angular_vel_;
+    //                 }
+    //             }else if(this->vel_output_.angular.z > 0.0){
+    //                 this->vel_output_.angular.z -= this->p_angular_accel_;
+    //             }else{
+    //                 this->vel_output_.angular.z += this->p_angular_accel_;
+    //             }
 
+    //         }
+    //     }
+
+    // }
+
+    if(this->p_round_now_ == this->p_goal_round_-0.5 || this->p_round_now_ == this->p_goal_round_){
+
+        if(this->if_trigger_.data == 1){
+
+            for(int i=0;i<30;i++){
+                this->vel_output_.angular.z = 0.0;
             }
-        }
 
+        }
+        else{
+
+            if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
+
+                if(this->vel_output_.angular.z > 0.0){
+                    this->vel_output_.angular.z = this->p_min_angular_vel_;
+                }else{
+                    this->vel_output_.angular.z = -this->p_min_angular_vel_;
+                }
+            }else if(this->vel_output_.angular.z > 0.0){
+                this->vel_output_.angular.z -= this->p_angular_accel_;
+            }else{
+                this->vel_output_.angular.z += this->p_angular_accel_;
+            }
+            }
+
+        }
+    
+
+                
     }
 
     if(this->p_publish_) this->publish();
@@ -243,5 +279,11 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
 void P_control::publish(){
 
     this->vel_pub_.publish(this->vel_output_);	
+
+}
+
+void P_control::LightGateCallback(const std_msgs::Bool::ConstPtr &msg_){
+
+    this->if_trigger_.data = msg_->data;
 
 }

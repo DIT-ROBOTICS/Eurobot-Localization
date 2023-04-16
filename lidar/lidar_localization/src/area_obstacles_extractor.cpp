@@ -171,7 +171,7 @@ void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles
       if(p_central_ && checkRobotpose(circle_msg.center)) continue;
 
       // Do low pass filter
-      circle_msg = doLowPassFilter(circle_msg);
+      // circle_msg = doLowPassFilter(circle_msg);
 
       output_obstacles_array_.circles.push_back(circle_msg);
 

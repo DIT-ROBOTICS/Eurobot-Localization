@@ -132,42 +132,20 @@ bool AreaObstaclesExtractor::updateParams(std_srvs::Empty::Request& req, std_srv
 
 void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles::ConstPtr& ptr)
 {
-  static tf2_ros::TransformListener tfListener(tfBuffer);
-
-  ros::Time now = ros::Time::now();
-  output_obstacles_array_.header.stamp = now;
+  output_obstacles_array_.header.stamp = ptr->header.stamp;
   output_obstacles_array_.header.frame_id = p_parent_frame_;
 
   // Clear all previous obstacles
   output_obstacles_array_.circles.clear();
-
-  // Get tf transform from base_footprint to map
-  geometry_msgs::TransformStamped transformStamped;
-  try{
-      transformStamped = tfBuffer.lookupTransform(p_parent_frame_, ptr->header.frame_id, ros::Time(0));
-  }
-  catch (tf2::TransformException &ex) {
-    ROS_WARN("%s", ex.what());
-    return;
-  }
-
   output_marker_array_.markers.clear();
+
   int id = 0;
+
   for (const obstacle_detector::CircleObstacle& circle : ptr->circles)
   {
 
-    // First transform from base_footprint to map
-    geometry_msgs::PointStamped obstacle_to_base;
-    obstacle_to_base.header.frame_id = ptr->header.frame_id;
-    obstacle_to_base.header.stamp = ptr->header.stamp;
-    obstacle_to_base.point = circle.center;
-
-    geometry_msgs::PointStamped obstacle_to_map;
-	tf2::doTransform(obstacle_to_base, obstacle_to_map, transformStamped);
-
-
     // Check obstacle boundary
-    if (checkBoundary(obstacle_to_base.point))
+    if (checkBoundary(circle.center))
     {
       obstacle_detector::CircleObstacle circle_msg;
       circle_msg.center = circle.center;
@@ -178,7 +156,7 @@ void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles
       // Central -> check obstacles on the other robot and average the closest obstacle
       if(p_central_){
         for(const obstacle_detector::CircleObstacle& ally_circle : ally_obstacles_.circles){
-          if(length(ally_circle.center, obstacle_to_map.point) < p_obstacle_merge_d_){
+          if(length(ally_circle.center, circle_msg.center) < p_obstacle_merge_d_){
 		    // Average the point
             circle_msg.center.x = (circle_msg.center.x + ally_circle.center.x) / 2;
             circle_msg.center.y = (circle_msg.center.y + ally_circle.center.y) / 2;
@@ -190,10 +168,10 @@ void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles
         }
       }
 
-      if(p_central_ && checkRobotpose(circle_msg.center)) return;
+      if(p_central_ && checkRobotpose(circle_msg.center)) continue;
 
       // Do low pass filter
-      circle_msg = doLowPassFilter(circle_msg);
+      // circle_msg = doLowPassFilter(circle_msg);
 
       output_obstacles_array_.circles.push_back(circle_msg);
 
@@ -201,7 +179,7 @@ void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles
         // Mark the obstacles
         visualization_msgs::Marker marker;
         marker.header.frame_id = p_parent_frame_;
-        marker.header.stamp = now;
+        marker.header.stamp = ptr->header.stamp;
         marker.id = id++;
         marker.type = visualization_msgs::Marker::CYLINDER;
         marker.lifetime = ros::Duration(0.1);
@@ -280,34 +258,14 @@ bool AreaObstaclesExtractor::checkBoundary(geometry_msgs::Point p)
   if (p.y < p_y_min_range_ || p.y > p_y_max_range_)
     ret = false;
 
-  // exclude some excluded circles
-  // int idx = 0;
-  // for (const auto exclude_pose_ : exclude_poses_)
-  // {
-  //   if (length(exclude_pose_, p) < p_excluded_radius_.at(idx))
-  //   {
-  //     ret = false;
-  //     break;
-  //   }
-  //   ++idx;
-  // }
-
-  // exclude too close or too far obstacles
-  // if (length(input_robot_pose_.pose.pose.position, p) > p_avoid_max_distance_)
-  //   ret = false;
-  // if (length(input_robot_pose_.pose.pose.position, p) < p_avoid_min_distance_)
-  //   ret = false;
-
-  // exclude ally obstacles
-  // if (length(input_ally_robot_pose_.pose.pose.position, p) < p_ally_excluded_radius_)
-  //   ret = false;
-
   return ret;
 }
 
 bool AreaObstaclesExtractor::checkRobotpose(geometry_msgs::Point p){
   if(length(input_robot_pose_.pose.pose.position, p) < p_obstacle_error_) return true;
-  if(length(input_ally_robot_pose_.pose.pose.position, p) < p_obstacle_error_) return true;
+  if(length(input_ally_robot_pose_.pose.pose.position, p) < p_obstacle_error_) {
+	  return true;
+  }
   return false;
 }
 
@@ -316,6 +274,7 @@ void AreaObstaclesExtractor::robotPoseCallback(const geometry_msgs::PoseWithCova
   input_robot_pose_ = *ptr;
 }
 
-void AreaObstaclesExtractor::allyRobotPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& ptr){
+void AreaObstaclesExtractor::allyRobotPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& ptr)
+{
   input_ally_robot_pose_ = *ptr;
 }

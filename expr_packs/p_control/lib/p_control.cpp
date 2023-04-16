@@ -211,9 +211,8 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
             this->p_round_now_ += 1.0;
         } 
 
-        std::cout << this->orientation_now_z_ << std::endl;
-        std::cout << this->if_trigger_ << std::endl;
-        std::cout << this->p_round_now_ << std::endl << "-----" << std::endl;
+        // std::cout << this->orientation_now_z_ << std::endl;
+        std::cout << "Round : " << this->p_round_now_ << std::endl << "-----" << std::endl;
 
         if(this->p_round_now_ < 1.0){
             if(vel_output_.angular.z < this->p_max_angular_vel_){
@@ -257,8 +256,10 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
                 this->vel_output_.angular.z = 0.0;
             }
 
+            this->stop = 1;
+
         }
-        else{
+        else if(!(this->stop)){
 
             if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
 
@@ -272,12 +273,10 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
             }else{
                 this->vel_output_.angular.z += this->p_angular_accel_;
             }
-            }
-
         }
-    
 
-                
+    }
+          
     }
 
     if(this->p_publish_) this->publish();

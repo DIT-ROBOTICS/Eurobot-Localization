@@ -68,6 +68,7 @@ private :
     bool p_or_n = 1;
     bool p_or_n_last = 1;
     bool if_trigger_;
+    bool stop = 0;
 
     std::string p_pub_topic_;
     std::string p_sub_topic_;

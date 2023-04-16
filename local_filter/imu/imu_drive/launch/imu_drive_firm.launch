@@ -1,8 +1,8 @@
 <launch>
 
-	<arg name="robot_name" default="robot1"/>
-	<arg name="robot_name_slash" default="robot1/"/>
-    <arg name="expr" value="1"/>
+	<arg name="robot_name" default=""/>
+	<arg name="robot_name_slash" default=""/>
+    <!-- <arg name="expr" value="1"/> -->
 
     <!-- Open imu firmware -->
     <include file="$(find imu_drive)/launch/spatial.launch">

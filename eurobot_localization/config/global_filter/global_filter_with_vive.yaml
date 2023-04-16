@@ -1,3 +1,4 @@
+
 frequency: 100                                                                                                                              
 silent_tf_failure: false                                                                                                                    
 sensor_timeout: 0.01                                                                                                                        
@@ -31,11 +32,13 @@ transform_timeout: 0
 #          r.,  p.,  y.,
 #          x.., y.., z..]
 odom0: odom
+
 odom0_config: [false, false, false, 
                false, false, false, 
                true,  true,  false, 
                false, false, true,   # yaw.
                false, false, false] 
+
 odom0_queue_size: 20
 odom0_differential: false
 odom0_relative: false
@@ -53,7 +56,9 @@ imu0_queue_size: 100
 imu0_differential: false
 imu0_relative: false
 imu0_nodelay: true
+
 imu0_twist_rejection_threshold: 1000000000000.0                                                                                             
+
 imu0_linear_acceleration_rejection_threshold: 1000000000000.0
 
 imu0_remove_gravitational_acceleration: false
@@ -126,6 +131,7 @@ process_noise_covariance: [0.005, 0,     0,    0,    0,    0,     0,     0,     
                            0,     0,     0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,    0.01, 0,
                            0,     0,     0,    0,    0,    0,     0,     0,     0,    0,    0,    0,    0,    0,    0]
 
+
 initial_estimate_covariance: [0.01, 0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
                               0,    0.01, 0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
                               0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
@@ -141,4 +147,3 @@ initial_estimate_covariance: [0.01, 0,    0,    0,    0,    0,    0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     1e-9, 0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    1e-9, 0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    1e-9]
-

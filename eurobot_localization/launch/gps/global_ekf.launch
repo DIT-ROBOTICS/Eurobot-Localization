@@ -7,7 +7,7 @@
     <group ns="$(arg robot_name)">
         <node name="ekf" pkg="eurobot_localization" type="ekf" >
             <rosparam file="$(find eurobot_localization)/config/global_filter/global_filter.yaml"/>
-			<param name="robot_name" value="$(arg robot_name_slash)"/>
+            <param name="robot_name" value="$(arg robot_name_slash)"/>
             <remap from="odom" to="global_filter"/>
         </node>
     </group>

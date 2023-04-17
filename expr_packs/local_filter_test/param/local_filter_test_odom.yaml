@@ -72,7 +72,7 @@ initial_state: [0.0,   0.0,   0.0,
                 0.0,   0.0,   0.0]
 
 publish_tf: false
-publish_acceleration: false # true->false
+publish_acceleration: true # true->false
 
 # control
 # acc_config: [x., y., z., r., p., y.]

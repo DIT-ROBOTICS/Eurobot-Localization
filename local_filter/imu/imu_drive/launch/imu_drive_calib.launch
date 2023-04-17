@@ -5,7 +5,7 @@
 
     <!-- Add calibration on imu raw data -->
     <node pkg="imu_calib" type="do_calib" name="do_calib" output="screen">
-        <remap from="/imu/raw" to="imu"/>
+        <remap from="imu" to="/imu/data_raw"/>
     </node>
 
 </launch>

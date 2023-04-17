@@ -1,14 +1,11 @@
 <launch>
 
     <!-- imu_driver -->
-    <include file="$(find imu_drive)/launch/spatial.launch">
-
-        <remap from="/imu/raw" to="imu"/>
-
-    </include>
+    <include file="$(find imu_drive)/launch/spatial.launch"/>
 
     <!-- Add calibration on imu raw data -->
-    <node pkg="imu_calib" type="do_calib" name="do_calib" output="screen"/>
-
+    <node pkg="imu_calib" type="do_calib" name="do_calib" output="screen">
+        <remap from="/imu/raw" to="imu"/>
+    </node>
 
 </launch>

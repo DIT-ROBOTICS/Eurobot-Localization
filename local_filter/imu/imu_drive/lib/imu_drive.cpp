@@ -161,10 +161,19 @@ void IMU::IMUdataCallback(const sensor_msgs::Imu::ConstPtr &msg){  //  from /imu
         this->imu_output_.angular_velocity.x = msg->angular_velocity.x * (1 - p_filter_prev_) + prev_angular_velocity.x * p_filter_prev_;
         this->imu_output_.angular_velocity.y = msg->angular_velocity.y * (1 - p_filter_prev_) + prev_angular_velocity.y * p_filter_prev_;
         this->imu_output_.angular_velocity.z = msg->angular_velocity.z * (1 - p_filter_prev_) + prev_angular_velocity.z * p_filter_prev_;
-    }
-    else this->imu_output_.angular_velocity = msg->angular_velocity;
 
-    this->imu_output_.linear_acceleration = msg->linear_acceleration;
+        // this->imu_output_.angular_velocity.x = sqrt(2)/2*(this->imu_output_.angular_velocity.x+this->imu_output_.angular_velocity.y);
+        // this->imu_output_.angular_velocity.y = sqrt(2)/2*(this->imu_output_.angular_velocity.x-this->imu_output_.angular_velocity.y);
+        this->imu_output_.linear_acceleration.x = -sqrt(2)/2*( -msg->linear_acceleration.x - msg->linear_acceleration.y );
+        this->imu_output_.linear_acceleration.y = -sqrt(2)/2*(msg->linear_acceleration.x - msg->linear_acceleration.y);
+    }
+    else{
+        this->imu_output_.angular_velocity = msg->angular_velocity;
+        this->imu_output_.linear_acceleration = msg->linear_acceleration;
+    }
+
+    
+
 
     this->prev_angular_velocity = this->imu_output_.angular_velocity;
 
@@ -189,13 +198,13 @@ void IMU::P_VelocityCallback(const geometry_msgs::Twist::ConstPtr &msg){
 
     /* imu_output_ = slope * x + original_covariance */
     
-    this->imu_output_.angular_velocity_covariance[0] = slope[0] + this->imu_output_backup_.angular_velocity_covariance[0];
-    this->imu_output_.angular_velocity_covariance[4] = slope[1] + this->imu_output_backup_.angular_velocity_covariance[4];
-    this->imu_output_.angular_velocity_covariance[8] = slope[2] + this->imu_output_backup_.angular_velocity_covariance[8];
+    // this->imu_output_.angular_velocity_covariance[0] = slope[0] + this->imu_output_backup_.angular_velocity_covariance[0];
+    // this->imu_output_.angular_velocity_covariance[4] = slope[1] + this->imu_output_backup_.angular_velocity_covariance[4];
+    // this->imu_output_.angular_velocity_covariance[8] = slope[2] + this->imu_output_backup_.angular_velocity_covariance[8];
 
-    this->imu_output_.linear_acceleration_covariance[0] = slope_accel[0] + this->imu_output_backup_.linear_acceleration_covariance[0];
-    this->imu_output_.linear_acceleration_covariance[4] = slope_accel[1] + this->imu_output_backup_.linear_acceleration_covariance[4];
-	this->imu_output_.linear_acceleration_covariance[8] = slope_accel[2] + this->imu_output_backup_.linear_acceleration_covariance[8];
+    // this->imu_output_.linear_acceleration_covariance[0] = slope_accel[0] + this->imu_output_backup_.linear_acceleration_covariance[0];
+    // this->imu_output_.linear_acceleration_covariance[4] = slope_accel[1] + this->imu_output_backup_.linear_acceleration_covariance[4];
+	// this->imu_output_.linear_acceleration_covariance[8] = slope_accel[2] + this->imu_output_backup_.linear_acceleration_covariance[8];
 
 }
 

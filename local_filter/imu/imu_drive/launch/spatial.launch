@@ -91,13 +91,12 @@
 	<param name="world_frame" value="enu"/>
 	<param name="publish_debug_topics" value="true"/>
 	<param name="yaw_offset" value="2.2"/>
-
-
-    <!-- <remap from="imu/data" to="mpu9250_imu"/> -->
+  <param name="gain" value="0.001"/>
+  <param name="zeta" value="-1"/>
 
   </node>
 
   #### IMU static transform ###############################################
-  <node name="base_footprint_to_imu" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 1 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)imu_link"/>
+  <node name="base_footprint_to_imu" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)imu_link "/>
 
 </launch>

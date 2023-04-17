@@ -51,6 +51,7 @@ private :
     double p_goal_yaw_;
     double p_goal_round_;
     double p_max_vel_;
+    double p_min_vel_;
     double p_max_angular_vel_;
     double position_now_x = 0;
     double position_now_y = 0;
@@ -64,11 +65,12 @@ private :
     bool p_with_p_control_;
     bool p_using_orientation_data_;
     bool p_using_linear_data_;
-    // bool if_first =1;
     bool p_or_n = 1;
     bool p_or_n_last = 1;
     bool if_trigger_;
     bool stop = 0;
+    bool stop_l = 0;
+    bool p_min = 0;
 
     std::string p_pub_topic_;
     std::string p_sub_topic_;

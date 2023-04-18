@@ -71,7 +71,7 @@ initial_state: [0.0,   0.0,   0.0,
                 0.0,   0.0,   0.0,
                 0.0,   0.0,   0.0]
 
-publish_tf: false
+publish_tf: true
 publish_acceleration: false # true->false
 
 # control

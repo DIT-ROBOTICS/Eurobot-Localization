@@ -35,6 +35,8 @@
             <param name="cov_multi_vel" value="0.2"/>
             <param name="cov_multi_acl" value="0.2"/>
 
+            <param name="filter_prev" value="0.1"/>
+
             <param name="using_nav_vel_cb" value="false"/>    <!-- "true" for cmd_vel, "false" for ekf_pose-->
 
         </node>

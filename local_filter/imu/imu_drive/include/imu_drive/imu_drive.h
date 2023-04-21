@@ -10,14 +10,13 @@
 #include <dynamic_reconfigure/server.h>
 #include "imu_drive/imu_drive_paramConfig.h"
 
-class IMU {
+class IMU
+{
 
-public :
-
+public:
     IMU(ros::NodeHandle &nh, ros::NodeHandle &nh_local);
 
-private :
-	
+private:
     /* Function - for initialize params */
     void Initialize();
 
@@ -28,27 +27,26 @@ private :
     void IMUdataCallback(const sensor_msgs::Imu::ConstPtr &msg);
 
     /* Function -> for geometry_msgs::Twist ( cmd_vel ) */
-	void P_VelocityCallback(const geometry_msgs::Twist::ConstPtr &msg);
+    void P_VelocityCallback(const geometry_msgs::Twist::ConstPtr &msg);
 
     /* Function -> for geometry_msgs::Twist ( cmd_vel ) */
-	void P_AccelerationCallback(const geometry_msgs::Twist::ConstPtr &msg);
-
-	/* Function -> for geometry_msgs::TwistWithCovariance ( ekf_pose ) */
-	void VelocityCallback(const geometry_msgs::TwistWithCovariance::ConstPtr &msg);
+    void P_AccelerationCallback(const geometry_msgs::Twist::ConstPtr &msg);
 
     /* Function -> for geometry_msgs::TwistWithCovariance ( ekf_pose ) */
-	void AccelerationCallback(const geometry_msgs::TwistWithCovariance::ConstPtr &msg);
+    void VelocityCallback(const geometry_msgs::TwistWithCovariance::ConstPtr &msg);
 
-	/* Set dynamic reconfigure */
+    /* Function -> for geometry_msgs::TwistWithCovariance ( ekf_pose ) */
+    void AccelerationCallback(const geometry_msgs::TwistWithCovariance::ConstPtr &msg);
+
+    /* Set dynamic reconfigure */
     void SetDynamicReconfigure();
 
-	/* Callback */
-	void DynamicParamCallback(imu_drive::imu_drive_paramConfig &config, uint32_t level);
-
+    /* Callback */
+    void DynamicParamCallback(imu_drive::imu_drive_paramConfig &config, uint32_t level);
 
     /* Function publish sth we need */
     void publish();
-	
+
     /** -- Node Handles -- **/
     ros::NodeHandle nh_;
     ros::NodeHandle nh_local_;
@@ -67,16 +65,16 @@ private :
     geometry_msgs::Vector3 prev_angular_velocity;
     geometry_msgs::Vector3 prev_linear_acceleration;
 
-	/* Parameters */
-	bool p_active_;
-	bool p_publish_;
-    bool p_update_params_; 
+    /* Parameters */
+    bool p_active_;
+    bool p_publish_;
+    bool p_update_params_;
     bool p_sub_from_nav_;
     bool p_use_dynamic_reconf_;
 
     double p_covariance_;
-	double p_cov_multi_vel_;
-	double p_cov_multi_acl_;
+    double p_cov_multi_vel_;
+    double p_cov_multi_acl_;
     double p_filter_prev_;
 
     std::string p_frame_;
@@ -84,5 +82,3 @@ private :
     std::string p_imu_sub_topic_;
     std::string p_imu_pub_topic_;
 };
-
-

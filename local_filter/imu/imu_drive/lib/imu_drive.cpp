@@ -158,14 +158,16 @@ void IMU::IMUdataCallback(const sensor_msgs::Imu::ConstPtr &msg){  //  from /imu
     this->imu_output_.orientation = msg->orientation;
 
     if(sequence != 1){
+        this->imu_output_.linear_acceleration.x = prev_linear_acceleration.x * (1 - p_filter_prev_) + msg->linear_acceleration.x * p_filter_prev_;
+        this->imu_output_.linear_acceleration.y = prev_linear_acceleration.y * (1 - p_filter_prev_) + msg->linear_acceleration.y * p_filter_prev_;
+        this->imu_output_.linear_acceleration.z = prev_linear_acceleration.z * (1 - p_filter_prev_) + msg->linear_acceleration.z * p_filter_prev_;
+
         this->imu_output_.angular_velocity.x = prev_angular_velocity.x * (1 - p_filter_prev_) + msg->angular_velocity.x * p_filter_prev_;
         this->imu_output_.angular_velocity.y = prev_angular_velocity.y * (1 - p_filter_prev_) + msg->angular_velocity.y * p_filter_prev_;
         this->imu_output_.angular_velocity.z = prev_angular_velocity.z * (1 - p_filter_prev_) + msg->angular_velocity.z * p_filter_prev_;
 
-        // this->imu_output_.angular_velocity.x = sqrt(2)/2*(this->imu_output_.angular_velocity.x+this->imu_output_.angular_velocity.y);
-        // this->imu_output_.angular_velocity.y = sqrt(2)/2*(this->imu_output_.angular_velocity.x-this->imu_output_.angular_velocity.y);
-        this->imu_output_.linear_acceleration.x = -sqrt(2)/2*( -msg->linear_acceleration.x - msg->linear_acceleration.y );
-        this->imu_output_.linear_acceleration.y = -sqrt(2)/2*(msg->linear_acceleration.x - msg->linear_acceleration.y);
+        // this->imu_output_.linear_acceleration.x = -sqrt(2)/2*( -msg->linear_acceleration.x - msg->linear_acceleration.y );
+        // this->imu_output_.linear_acceleration.y = -sqrt(2)/2*(msg->linear_acceleration.x - msg->linear_acceleration.y);
     }
     else{
         this->imu_output_.angular_velocity = msg->angular_velocity;
@@ -176,6 +178,7 @@ void IMU::IMUdataCallback(const sensor_msgs::Imu::ConstPtr &msg){  //  from /imu
 
 
     this->prev_angular_velocity = this->imu_output_.angular_velocity;
+    this->prev_linear_acceleration = this->imu_output_.linear_acceleration;
 
     if(this->p_publish_) this->publish();
 

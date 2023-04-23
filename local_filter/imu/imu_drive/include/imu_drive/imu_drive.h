@@ -77,6 +77,11 @@ private:
     double p_cov_multi_acl_;
     double p_filter_prev_;
 
+    double p_accel_bias_x_;
+    double p_accel_bias_y_;
+    double p_accel_bias_z_;
+
+
     std::string p_frame_;
 
     std::string p_imu_sub_topic_;

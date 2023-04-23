@@ -97,6 +97,6 @@
   </node>
 
   #### IMU static transform ###############################################
-  <node name="base_footprint_to_imu" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)imu_link "/>
+  <node name="base_footprint_to_imu" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 2.355 0 0 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)imu_link "/>
 
 </launch>

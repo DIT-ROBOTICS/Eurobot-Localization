@@ -2,15 +2,21 @@
 
 	<arg name="robot_name" default="robot1"/>
 	<arg name="robot_name_slash" default="robot1/"/>
-    <arg name="expr" value="1"/>
 
     <!-- Open imu firmware -->
-    <include file="$(find imu_drive)/launch/spatial.launch">
-		<arg name="robot_name" value="$(arg robot_name)"/>        
-        <arg name="robot_name_slash" value="$(arg robot_name_slash)"/> 
-    </include>
+   
 
     <group ns="$(arg robot_name)">
+
+         <include file="$(find imu_drive)/launch/spatial.launch">
+            <arg name="robot_name" default="robot1"/>
+	        <arg name="robot_name_slash" default="robot1/"/>
+        </include>
+
+        <!-- <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
+            <remap from="corrected" to="/robot1/imu/data_corrected"/>
+            <remap from="raw" to="/robot1/imu/data"/>
+        </node> -->
 
         <node pkg="imu_drive" type="imu_drive_node" name="imu_node" output="screen">
             
@@ -33,6 +39,8 @@
 
             <param name="cov_multi_vel" value="0.2"/>
             <param name="cov_multi_acl" value="0.2"/>
+
+            <param name="filter_prev" value="0.2"/>
 
             <param name="using_nav_vel_cb" value="false"/>    <!-- "true" for cmd_vel, "false" for ekf_pose-->
 

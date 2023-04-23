@@ -37,7 +37,7 @@
     <!-- <param name="algorithm_magnetometer_gain" value="0.005"/> -->
 
     # optional param heating_enabled, not modified by default
-    <!-- <param name="heating_enabled" value="false"/> -->
+    <param name="heating_enabled" value="true"/>
 
     # optional param linear_acceleration_stdev, default is 280ug
     <param name="linear_acceleration_stdev" value="0.0280"/>
@@ -91,13 +91,12 @@
 	<param name="world_frame" value="enu"/>
 	<param name="publish_debug_topics" value="true"/>
 	<param name="yaw_offset" value="2.2"/>
-
-
-    <!-- <remap from="imu/data" to="mpu9250_imu"/> -->
+  <param name="gain" value="0.01"/>
+  <param name="zeta" value="0"/>
 
   </node>
 
   #### IMU static transform ###############################################
-  <node name="base_footprint_to_imu" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 1 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)imu_link"/>
+  <node name="base_footprint_to_imu" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 2.355 0 0 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)imu_link "/>
 
 </launch>

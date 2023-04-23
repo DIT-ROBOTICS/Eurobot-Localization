@@ -193,7 +193,7 @@ void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles
       if(p_central_ && checkRobotpose(circle_msg.center)) return;
 
       // Do low pass filter
-      circle_msg = doLowPassFilter(circle_msg);
+      // circle_msg = doLowPassFilter(circle_msg);
 
       output_obstacles_array_.circles.push_back(circle_msg);
 
@@ -280,34 +280,18 @@ bool AreaObstaclesExtractor::checkBoundary(geometry_msgs::Point p)
   if (p.y < p_y_min_range_ || p.y > p_y_max_range_)
     ret = false;
 
-  // exclude some excluded circles
-  // int idx = 0;
-  // for (const auto exclude_pose_ : exclude_poses_)
-  // {
-  //   if (length(exclude_pose_, p) < p_excluded_radius_.at(idx))
-  //   {
-  //     ret = false;
-  //     break;
-  //   }
-  //   ++idx;
-  // }
-
-  // exclude too close or too far obstacles
-  // if (length(input_robot_pose_.pose.pose.position, p) > p_avoid_max_distance_)
-  //   ret = false;
-  // if (length(input_robot_pose_.pose.pose.position, p) < p_avoid_min_distance_)
-  //   ret = false;
-
-  // exclude ally obstacles
-  // if (length(input_ally_robot_pose_.pose.pose.position, p) < p_ally_excluded_radius_)
-  //   ret = false;
-
   return ret;
 }
 
 bool AreaObstaclesExtractor::checkRobotpose(geometry_msgs::Point p){
   if(length(input_robot_pose_.pose.pose.position, p) < p_obstacle_error_) return true;
+<<<<<<< HEAD
   if(length(input_ally_robot_pose_.pose.pose.position, p) < p_obstacle_error_) return true;
+=======
+  if(length(input_ally_robot_pose_.pose.pose.position, p) < p_obstacle_error_) {
+	  return true;
+  }
+>>>>>>> 97b45e5e63a1969f7b1cfc1d209731ecbf60322c
   return false;
 }
 
@@ -316,6 +300,7 @@ void AreaObstaclesExtractor::robotPoseCallback(const geometry_msgs::PoseWithCova
   input_robot_pose_ = *ptr;
 }
 
-void AreaObstaclesExtractor::allyRobotPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& ptr){
+void AreaObstaclesExtractor::allyRobotPoseCallback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& ptr)
+{
   input_ally_robot_pose_ = *ptr;
 }

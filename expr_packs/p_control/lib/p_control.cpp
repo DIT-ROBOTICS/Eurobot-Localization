@@ -64,6 +64,10 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
         ROS_INFO_STREAM("[P CONTROL] : Max linear velocity set to " << p_max_vel_); 
     }
 
+    if(this->nh_local_.param<double>("min_linear_vel", p_min_vel_, 0.05)){
+        ROS_INFO_STREAM("[P CONTROL] : Min linear velocity set to " << p_min_vel_); 
+    }
+
     if(this->nh_local_.param<double>("max_angular_vel", p_max_angular_vel_, 0.5)){
         ROS_INFO_STREAM("[P CONTROL] : Max angular velocity set to " << p_max_angular_vel_); 
     }
@@ -74,6 +78,10 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
     if(this->nh_local_.param<double>("angular_accel", p_angular_accel_, 0.01)){
         ROS_INFO_STREAM("[P CONTROL] : Angular accel set to " << p_angular_accel_); 
+    }
+
+    if(this->nh_local_.param<double>("linear_accel", p_linear_accel_x_, 0.01)){
+        ROS_INFO_STREAM("[P CONTROL] : Linear accel set to " << p_linear_accel_x_); 
     }
 
     if(this->nh_local_.param<bool>("with_p_control", p_with_p_control_, true)){
@@ -133,40 +141,73 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
 
     // linear velocity
     if(this->p_using_linear_data_){
-        if( (this->p_goal_x_ - fabs(this->position_now_x)) > 0.001 || (this->p_goal_y_ - (this->position_now_y)) > 0.001){
+        // if( (this->p_goal_x_ - fabs(this->position_now_x)) > 0.001 || (this->p_goal_y_ - (this->position_now_y)) > 0.001){
         
-        if(this->p_with_p_control_){
+        //     if(this->p_with_p_control_){
 
-            if((this->p_goal_x_-fabs(this->position_now_x)) > (this->p_goal_x_/2.0) && this->vel_output_.linear.x <= this->p_max_vel_){
-                this->vel_output_.linear.x += 0.001;
-                // std::cout << this->vel_output_.linear.x << std::endl;
-            }
-            if((this->p_goal_y_-fabs(this->position_now_y)) > (this->p_goal_y_/2.0) && this->vel_output_.linear.y <= this->p_max_vel_){
-                this->vel_output_.linear.y += 0.001;
-                // std::cout << this->vel_output_.linear.y << std::endl;
-            }
-    
-            if((this->p_goal_x_-fabs(this->position_now_x)) < (this->p_goal_x_/2.0) && this->vel_output_.linear.x >= 0.05){
+        //         if((this->p_goal_x_-fabs(this->position_now_x)) > (this->p_goal_x_/2.0) && this->vel_output_.linear.x <= this->p_max_vel_){
+        //             this->vel_output_.linear.x += 0.001;
+        //             // std::cout << this->vel_output_.linear.x << std::endl;
+        //         }
+        //         if((this->p_goal_y_-fabs(this->position_now_y)) > (this->p_goal_y_/2.0) && this->vel_output_.linear.y <= this->p_max_vel_){
+        //             this->vel_output_.linear.y += 0.001;
+        //             // std::cout << this->vel_output_.linear.y << std::endl;
+        //         }
+        
+        //         if((this->p_goal_x_-fabs(this->position_now_x)) < (this->p_goal_x_/2.0) && this->vel_output_.linear.x >= 0.05){
 
-                // this->vel_output_.linear.x = (this->p_max_vel_) * (this->p_goal_x_ - this->position_now_x);
-                // this->vel_output_.linear.y = (this->p_max_vel_) * (this->p_goal_y_ - this->position_now_y);
-                this->vel_output_.linear.x -= 0.001; 
-                // std::cout << this->vel_output_.linear.x << std::endl;
-            }
-            if((this->p_goal_x_-fabs(this->position_now_x)) < (this->p_goal_x_/2.0) && this->vel_output_.linear.x >= 0.05){
+        //             // this->vel_output_.linear.x = (this->p_max_vel_) * (this->p_goal_x_ - this->position_now_x);
+        //             // this->vel_output_.linear.y = (this->p_max_vel_) * (this->p_goal_y_ - this->position_now_y);
+        //             this->vel_output_.linear.x -= 0.001; 
+        //             // std::cout << this->vel_output_.linear.x << std::endl;
+        //         }
+        //         if((this->p_goal_x_-fabs(this->position_now_x)) < (this->p_goal_x_/2.0) && this->vel_output_.linear.x >= 0.05){
 
-                this->vel_output_.linear.x -= 0.001; 
-                // std::cout << this->vel_output_.linear.x << std::endl;
+        //             this->vel_output_.linear.x -= 0.001; 
+        //             // std::cout << this->vel_output_.linear.x << std::endl;
+        //         }
+        //     }
+
+        // }else{
+
+        //     this->vel_output_.linear.x = 0.0;
+        //     this->vel_output_.linear.y = 0.0;
+        // }
+
+        // this->p_linear_accel_x_ = pow(this->p_max_vel_, 2)/(2.0*(this->p_goal_x_/3.0));
+
+        if(fabs(this->p_goal_x_ - this->position_now_x) < 0.01){
+            
+            this->p_linear_accel_x_ = 0;
+            for(int i=0;i<30;i++){
+                this->vel_output_.linear.x = 0.0;
             }
+            // std::cout << "position_x : " << this->position_now_x << std::endl;
+            // std::cout << "Accel : stop" << this->p_linear_accel_x_ << std::endl;
+
+            this->stop_l = 1;
         }
+        else if(this->stop_l == 0){
 
-        }else{
+            if(this->vel_output_.linear.x < this->p_max_vel_ && fabs(this->p_goal_x_ - this->position_now_x) > (this->p_goal_x_/2.0)){
+                this->vel_output_.linear.x += this->p_linear_accel_x_;
+                // std::cout << "position_x : " << this->position_now_x << std::endl;
+                // std::cout << "Accel : " << this->p_linear_accel_x_ << std::endl;
+            }
+            else if(fabs(this->p_goal_x_ - this->position_now_x) < (this->p_goal_x_/3.0) && this->vel_output_.linear.x > 0.0){
+                if(this->p_min == 0){
 
-            this->vel_output_.linear.x = 0.0;
-            this->vel_output_.linear.y = 0.0;
+                    this->vel_output_.linear.x -= this->p_linear_accel_x_;
+                    // std::cout << "position_x : " << this->position_now_x << std::endl;
+                    // std::cout << "Accel : " << -this->p_linear_accel_x_ << std::endl;
+
+                }if(this->vel_output_.linear.x <= 0.0){
+                    this->vel_output_.linear.x = this->p_min_vel_;
+                    this->p_min = 1;
+                } 
+            }
         }
     }
-    
     
     // angular velocity
 
@@ -177,31 +218,7 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
         tf::Quaternion q;
         // Set the quaternion values from the message
         tf::quaternionMsgToTF(msg->pose.pose.orientation, q);
-        this->orientation_now_z_ = tf::getYaw(q) * 180 / M_PI;
-
-        // if(if_first){
-        //     if(this->orientation_now_z_ > 0){
-        //         p_or_n_last = 1;
-        //         p_or_n = 1;
-        //     }else{
-        //         p_or_n_last = 0;
-        //         p_or_n = 0;
-        //     }
-        //     if_first = 0;
-        //     this->p_round_now_ = -0.5;
-        // }else{
-        //     p_or_n_last = p_or_n;
-        // }
-
-        // if(this->orientation_now_z_ > 0){
-        //     p_or_n = 1;
-        // }else{
-        //     p_or_n = 0;
-        // }
-
-        // if(p_or_n != p_or_n_last){
-        //     this->p_round_now_ += 0.5;
-        // }  
+        this->orientation_now_z_ = tf::getYaw(q) * 180 / M_PI; 
         
         p_or_n_last = p_or_n;
 
@@ -211,43 +228,14 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
             this->p_round_now_ += 1.0;
         } 
 
-        std::cout << this->orientation_now_z_ << std::endl;
-        std::cout << this->if_trigger_ << std::endl;
-        std::cout << this->p_round_now_ << std::endl << "-----" << std::endl;
+        // std::cout << this->orientation_now_z_ << std::endl;
+        std::cout << "Round : " << this->p_round_now_ << std::endl << "-----" << std::endl;
 
         if(this->p_round_now_ < 1.0){
             if(vel_output_.angular.z < this->p_max_angular_vel_){
                 this->vel_output_.angular.z += 0.01;
             }
         }
-
-    //     if(this->p_round_now_ == this->p_goal_round_-0.5 || this->p_round_now_ == this->p_goal_round_){
-
-    //         if(fabs(this->orientation_now_z_) <= 1){
-
-    //             for(int i=0;i<30;i++){
-    //                 this->vel_output_.angular.z = 0.0;
-    //             }
-
-    //         }else{
-
-    //             if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
-
-    //                 if(this->vel_output_.angular.z > 0.0){
-    //                     this->vel_output_.angular.z = this->p_min_angular_vel_;
-    //                 }else{
-    //                     this->vel_output_.angular.z = -this->p_min_angular_vel_;
-    //                 }
-    //             }else if(this->vel_output_.angular.z > 0.0){
-    //                 this->vel_output_.angular.z -= this->p_angular_accel_;
-    //             }else{
-    //                 this->vel_output_.angular.z += this->p_angular_accel_;
-    //             }
-
-    //         }
-    //     }
-
-    // }
 
     if(this->p_round_now_ == this->p_goal_round_- 1.0 || this->p_round_now_ == this->p_goal_round_){
 
@@ -257,8 +245,10 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
                 this->vel_output_.angular.z = 0.0;
             }
 
+            this->stop = 1;
+
         }
-        else{
+        else if(!(this->stop)){
 
             if(fabs(this->vel_output_.angular.z) < this->p_min_angular_vel_){
 
@@ -272,12 +262,10 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
             }else{
                 this->vel_output_.angular.z += this->p_angular_accel_;
             }
-            }
-
         }
-    
 
-                
+    }
+          
     }
 
     if(this->p_publish_) this->publish();

@@ -9,6 +9,12 @@
         <node name="base_link_to_laser" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 1.45 0 0 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)laser_frame" />
         <node name="base_link_to_vive" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0.999 0.035 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)vive_frame" />
 
+<<<<<<< HEAD
+=======
+        <!-- NEW ROBOT2 -->
+        <node name="base_link_to_laser" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 3.05 0 0 $(arg robot_name_slash)base_footprint $(arg robot_name_slash)laser_frame" />
+
+>>>>>>> 97b45e5e63a1969f7b1cfc1d209731ecbf60322c
 
         <!-- lidar localization -->
         <node name="obstacle_detector_to_base" pkg="obstacle_detector" type="obstacle_extractor_node">
@@ -80,6 +86,9 @@
             <param name="central" value="false" if="$(eval arg('active_rival_center')==0)"/>
 
             <param name="parent_frame" value="$(arg robot_name_slash)map"/>
+            <param name="obstacle_error" value="0.23"/>
+            <param name="obstacle_merge_d" value="0.2"/>
+
 
             <remap from="robot_pose" to="/robot1/ekf_pose" if="$(eval arg('robot_name')=='robot1')"/>
             <remap from="robot_pose" to="/robot2/ekf_pose" if="$(eval arg('robot_name')=='robot2')"/>

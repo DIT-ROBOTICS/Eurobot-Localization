@@ -1,0 +1,13 @@
+<launch>
+
+    <include file="$(find imu_drive)/launch/spatial.launch"/>
+
+    <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
+        <!-- <remap from="corrected" to="/imu/data_corrected"/> -->
+        <remap from="raw" to="/imu/data"/>
+        <param name="calibrate_gyros" value="false"/>
+        <param name="calibrate_acc" value="false"/>
+
+    </node>
+
+</launch>

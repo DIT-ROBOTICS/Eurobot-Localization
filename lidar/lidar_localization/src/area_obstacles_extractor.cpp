@@ -285,13 +285,9 @@ bool AreaObstaclesExtractor::checkBoundary(geometry_msgs::Point p)
 
 bool AreaObstaclesExtractor::checkRobotpose(geometry_msgs::Point p){
   if(length(input_robot_pose_.pose.pose.position, p) < p_obstacle_error_) return true;
-<<<<<<< HEAD
-  if(length(input_ally_robot_pose_.pose.pose.position, p) < p_obstacle_error_) return true;
-=======
   if(length(input_ally_robot_pose_.pose.pose.position, p) < p_obstacle_error_) {
 	  return true;
   }
->>>>>>> 97b45e5e63a1969f7b1cfc1d209731ecbf60322c
   return false;
 }
 

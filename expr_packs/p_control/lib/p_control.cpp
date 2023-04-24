@@ -136,6 +136,7 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
 void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
     
+    
     this->position_now_x = msg->pose.pose.position.x;
     this->position_now_y = msg->pose.pose.position.y;
 
@@ -175,7 +176,7 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
         // }
 
         // this->p_linear_accel_x_ = pow(this->p_max_vel_, 2)/(2.0*(this->p_goal_x_/3.0));
-
+        ros::Rate r(100);
         if(fabs(this->p_goal_x_ - this->position_now_x) < 0.01){
             
             this->p_linear_accel_x_ = 0;
@@ -190,7 +191,7 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
         else if(this->stop_l == 0){
 
             if(this->vel_output_.linear.x < this->p_max_vel_ && fabs(this->p_goal_x_ - this->position_now_x) > (this->p_goal_x_/2.0)){
-                this->vel_output_.linear.x += this->p_linear_accel_x_;
+                this->vel_output_.linear.x += this->p_linear_accel_x_/100;
                 // std::cout << "position_x : " << this->position_now_x << std::endl;
                 // std::cout << "Accel : " << this->p_linear_accel_x_ << std::endl;
             }
@@ -269,7 +270,7 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
     }
 
     if(this->p_publish_) this->publish();
-
+    r.sleep();
 }
 
 

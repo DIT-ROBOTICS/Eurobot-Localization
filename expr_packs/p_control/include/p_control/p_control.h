@@ -10,6 +10,8 @@
 #include <cmath>
 #include "std_msgs/Bool.h"
 
+ros::Rate r(100);
+
 class P_control {
 
 public :

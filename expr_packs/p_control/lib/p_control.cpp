@@ -115,7 +115,7 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
             ROS_INFO_STREAM("[P CONTROL] : active node");
             this->pose_sub_ = nh_.subscribe(p_sub_topic_, 10, &P_control::PoseCallback, this);
             this->lightgate_sub_ = nh_.subscribe<std_msgs::Bool>(p_sub_topic_2_, 10, &P_control::LightGateCallback, this);
-            this->vel_pub_ = nh_.advertise<geometry_msgs::Twist>(p_pub_topic_, 10);
+            this->vel_pub_ = nh_.advertise<geometry_msgs::Twist>(p_pub_topic_, 1);
 
             if(this->p_update_params_){
                 this->param_srv_ = nh_local_.advertiseService("params", &P_control::UpdateParams, this);
@@ -190,7 +190,8 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
         else if(this->stop_l == 0){
 
             if(this->vel_output_.linear.x < this->p_max_vel_ && fabs(this->p_goal_x_ - this->position_now_x) > (this->p_goal_x_/2.0)){
-                this->vel_output_.linear.x += this->p_linear_accel_x_;
+                this->vel_output_.linear.x += this->p_linear_accel_x_/100;
+                r.sleep();
                 // std::cout << "position_x : " << this->position_now_x << std::endl;
                 // std::cout << "Accel : " << this->p_linear_accel_x_ << std::endl;
             }

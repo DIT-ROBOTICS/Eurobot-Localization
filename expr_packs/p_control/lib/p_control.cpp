@@ -183,8 +183,6 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
             for(int i=0;i<30;i++){
                 this->vel_output_.linear.x = 0.0;
             }
-            // std::cout << "position_x : " << this->position_now_x << std::endl;
-            // std::cout << "Accel : stop" << this->p_linear_accel_x_ << std::endl;
 
             this->stop_l = 1;
         }
@@ -192,17 +190,13 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
 
             if(this->vel_output_.linear.x < this->p_max_vel_ && fabs(this->p_goal_x_ - this->position_now_x) > (this->p_goal_x_/2.0)){
                 this->vel_output_.linear.x += this->p_linear_accel_x_/100;
-<<<<<<< HEAD
-=======
-
->>>>>>> 21c3ed3c213d0f946b3ec7fe9880bfd0c132ea23
                 // std::cout << "position_x : " << this->position_now_x << std::endl;
                 // std::cout << "Accel : " << this->p_linear_accel_x_ << std::endl;
             }
             else if(fabs(this->p_goal_x_ - this->position_now_x) < (this->p_goal_x_/3.0) && this->vel_output_.linear.x > 0.0){
                 if(this->p_min == 0){
 
-                    this->vel_output_.linear.x -= this->p_linear_accel_x_;
+                    this->vel_output_.linear.x -= this->p_linear_accel_x_/100;
                     // std::cout << "position_x : " << this->position_now_x << std::endl;
                     // std::cout << "Accel : " << -this->p_linear_accel_x_ << std::endl;
 

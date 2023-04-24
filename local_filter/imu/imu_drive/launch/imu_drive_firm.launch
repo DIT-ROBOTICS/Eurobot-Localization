@@ -13,16 +13,18 @@
 	        <arg name="robot_name_slash" default="robot1/"/>
         </include>
 
-        <!-- <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
+        <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
             <remap from="corrected" to="/robot1/imu/data_corrected"/>
             <remap from="raw" to="/robot1/imu/data"/>
-        </node> -->
+            <!-- <param name="calib_file" value="/home/leokang/Eurobot2023_localization_ws/src/localization/local_filter/imu/imu_calib/imu_calib_black.yaml"/> -->
+
+        </node>
 
         <node pkg="imu_drive" type="imu_drive_node" name="imu_node" output="screen">
             
             <param name="active" value="true"/>
             <param name="publish" value="true"/>
-            <param name="sub_topic" value="/$(arg robot_name)/imu/data"/>
+            <param name="sub_topic" value="/$(arg robot_name)/imu/data_corrected"/>
             <param name="pub_topic" value="/$(arg robot_name)/imu/data_cov"/>
             <remap from="/cmd_vel" to="/$(arg robot_name)/cmd_vel"/>
             <remap from="/ekf_pose" to="/$(arg robot_name)/ekf_pose_in_pose"/>

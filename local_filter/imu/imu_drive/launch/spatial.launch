@@ -91,7 +91,7 @@
 	<param name="world_frame" value="enu"/>
 	<param name="publish_debug_topics" value="true"/>
 	<param name="yaw_offset" value="2.2"/>
-  <param name="gain" value="0.1"/>
+  <param name="gain" value="0.001"/>
   <param name="zeta" value="0"/>
 
   </node>

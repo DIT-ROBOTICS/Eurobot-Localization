@@ -136,6 +136,7 @@ bool P_control::UpdateParams(std_srvs::Empty::Request &req, std_srvs::Empty::Res
 
 void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
     
+    ros::Rate r(100);
     this->position_now_x = msg->pose.pose.position.x;
     this->position_now_y = msg->pose.pose.position.y;
 
@@ -191,7 +192,7 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
 
             if(this->vel_output_.linear.x < this->p_max_vel_ && fabs(this->p_goal_x_ - this->position_now_x) > (this->p_goal_x_/2.0)){
                 this->vel_output_.linear.x += this->p_linear_accel_x_/100;
-                r.sleep();
+
                 // std::cout << "position_x : " << this->position_now_x << std::endl;
                 // std::cout << "Accel : " << this->p_linear_accel_x_ << std::endl;
             }
@@ -270,7 +271,7 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
     }
 
     if(this->p_publish_) this->publish();
-
+    r.sleep();
 }
 
 

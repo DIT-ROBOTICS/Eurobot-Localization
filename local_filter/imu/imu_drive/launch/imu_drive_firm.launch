@@ -16,7 +16,7 @@
         <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
             <remap from="corrected" to="/robot1/imu/data_corrected"/>
             <remap from="raw" to="/robot1/imu/data"/>
-            <!-- <param name="calib_file" value="/home/leokang/Eurobot2023_localization_ws/src/localization/local_filter/imu/imu_calib/imu_calib_black.yaml"/> -->
+            <param name="calib_file" value="/home/ubuntu/Eurobot2023_ws_new/src/localization/local_filter/imu/imu_calib/imu_calib_black.yaml"/>
 
         </node>
 

@@ -1,3 +1,0 @@
-[submodule "local_filter/imu/imu_calib"]
-	path = local_filter/imu/imu_calib
-	url = https://github.com/sunfu-chou/imu_calib.git

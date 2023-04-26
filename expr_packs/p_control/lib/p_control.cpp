@@ -144,45 +144,45 @@ void P_control::PoseCallback(const nav_msgs::Odometry::ConstPtr &msg){
     // linear velocity
     if(this->p_using_linear_data_){
 
-        // if(fabs(this->p_goal_x_ - this->position_now_x) < 0.01){
+        if(fabs(this->p_goal_x_ - this->position_now_x) < 0.01){
             
-        //     this->p_linear_accel_x_ = 0;
-        //     for(int i=0;i<30;i++){
-        //         this->vel_output_.linear.x = 0.0;
-        //     }
-
-        //     this->stop_l = 1;
-        // }
-        // else if(this->stop_l == 0){
-
-        //     if(this->vel_output_.linear.x < this->p_max_vel_ && fabs(this->p_goal_x_ - this->position_now_x) > (this->p_goal_x_/2.0)){
-        //         this->vel_output_.linear.x += this->p_linear_accel_x_/100;
-        //     }
-        //     else if(fabs(this->p_goal_x_ - this->position_now_x) < (this->p_goal_x_/3.0) && this->vel_output_.linear.x > 0.0){
-        //         if(this->p_min == 0){
-
-        //             this->vel_output_.linear.x -= this->p_linear_accel_x_/100;
-
-        //         }if(this->vel_output_.linear.x <= 0.0){
-        //             this->vel_output_.linear.x = this->p_min_vel_;
-        //             this->p_min = 1;
-        //         } 
-        //     }
-        // }
-        if(this->vel_output_.linear.x < this->p_max_vel_){
-            this->vel_output_.linear.x += this->p_linear_accel_x_/100;
-        }
-        else if(fabs(this->p_goal_x_ - this->position_now_x) < (this->p_goal_x_/3.0) && this->vel_output_.linear.x > 0){
-            this->vel_output_.linear.x -= this->p_linear_accel_x_/100;
-        }
-        else if(this->vel_output_.linear.x <= 0){
             this->p_linear_accel_x_ = 0;
             for(int i=0;i<30;i++){
                 this->vel_output_.linear.x = 0.0;
             }
-        }else{
-            this->vel_output_.linear.x = this->p_max_vel_;
+
+            this->stop_l = 1;
         }
+        else if(this->stop_l == 0){
+
+            if(this->vel_output_.linear.x < this->p_max_vel_ && fabs(this->p_goal_x_ - this->position_now_x) > (this->p_goal_x_/2.0)){
+                this->vel_output_.linear.x += this->p_linear_accel_x_/100;
+            }
+            else if(fabs(this->p_goal_x_ - this->position_now_x) < (this->p_goal_x_/3.0) && this->vel_output_.linear.x > 0.0){
+                if(this->p_min == 0){
+
+                    this->vel_output_.linear.x -= this->p_linear_accel_x_/100;
+
+                }if(this->vel_output_.linear.x <= 0.0){
+                    this->vel_output_.linear.x = this->p_min_vel_;
+                    this->p_min = 1;
+                } 
+            }
+        }
+        // if(this->vel_output_.linear.x < this->p_max_vel_){
+        //     this->vel_output_.linear.x += this->p_linear_accel_x_/100;
+        // }
+        // else if(fabs(this->p_goal_x_ - this->position_now_x) < (this->p_goal_x_/3.0) && this->vel_output_.linear.x > 0){
+        //     this->vel_output_.linear.x -= this->p_linear_accel_x_/100;
+        // }
+        // else if(this->vel_output_.linear.x <= 0){
+        //     this->p_linear_accel_x_ = 0;
+        //     for(int i=0;i<30;i++){
+        //         this->vel_output_.linear.x = 0.0;
+        //     }
+        // }else{
+        //     this->vel_output_.linear.x = this->p_max_vel_;
+        // }
         //----------
     }
     

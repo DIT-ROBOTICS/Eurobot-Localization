@@ -2,6 +2,13 @@
     "cmake.sourceDirectory": "${workspaceFolder}/local_filter/odometry/odometry",
     "files.associations": {
         "cmath": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "array": "cpp",
+        "deque": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "string_view": "cpp",
+        "ostream": "cpp"
     }
 }

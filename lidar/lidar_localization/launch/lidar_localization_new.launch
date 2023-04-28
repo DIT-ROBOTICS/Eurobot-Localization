@@ -93,6 +93,7 @@
             <param name="obstacle_merge_d" value="0.15"/>
             <param name="obstacle_vel_merge_d" value="0.2"/>
             <param name="obstacle_error" value="0.2"/>
+            <param name="obstacle_lpf_cur" value="0.1"/>
 
             <remap from="robot_pose" to="/robot1/ekf_pose" if="$(eval arg('robot_name')=='robot1')"/>
             <remap from="robot_pose" to="/robot2/ekf_pose" if="$(eval arg('robot_name')=='robot2')"/>

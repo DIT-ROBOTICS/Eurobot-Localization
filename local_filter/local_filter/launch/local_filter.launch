@@ -37,23 +37,5 @@
         <!-- P_control test -->
         
     </group>
-    <node pkg="p_control" type="p_control_node" name="p_control_node" output="screen">
-            <param name="active" value="true"/>
-            <param name="publish" value="true"/>
-            <param name="sub_topic" value="/ekf_pose_in_odom"/>
-            <param name="pub_topic" value="/$(arg robot_name)/cmd_vel"/>
-            <param name="update_params" value="false"/>
-            <param name="goal_x" value="1.0"/>
-            <param name="goal_y" value="0.0"/>
-            <param name="goal_yaw" value="0.0"/>
-            <param name="goal_round" value="5.0"/>
-            <param name="max_linear_vel" value="0.2"/>
-            <param name="max_angular_vel" value="0.6"/>
-            <param name="min_angular_vel" value="0.4"/>
-            <param name="angular_accel" value="0.002"/>
-            <param name="with_p_control" value="true"/>
-            <param name="using_orientation_data" value="true"/>
-            <param name="using_linear_data" value="false"/>
-        </node>
 
 </launch>

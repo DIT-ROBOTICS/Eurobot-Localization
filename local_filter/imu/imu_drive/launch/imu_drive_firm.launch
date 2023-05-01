@@ -1,54 +1,35 @@
 <launch>
 
-	<arg name="robot_name" default="robot1"/>
-	<arg name="robot_name_slash" default="robot1/"/>
+	<arg name="robot_name" default=""/>
+	<arg name="robot_name_slash" default=""/>
+
+	<arg name="param" default="1"/>
 
     <!-- Open imu firmware -->
    
+    <include file="$(find imu_drive)/launch/spatial.launch">
+        <arg name="robot_name" default="$(arg robot_name)"/>
+	    <arg name="robot_name_slash" default="$(arg robot_name_slash)/"/>
+    </include>
 
-    <group ns="$(arg robot_name)">
+    <node pkg="imu_drive" type="imu_drive_node" name="imu_node">
 
-         <include file="$(find imu_drive)/launch/spatial.launch">
-            <arg name="robot_name" default="robot1"/>
-	        <arg name="robot_name_slash" default="robot1/"/>
-        </include>
+        <rosparam command="load" file="$(find imu_drive)/param/imu_drive_firm.yaml" if="$(eval arg('param')==1)"/>
 
-        <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
-            <remap from="corrected" to="/robot1/imu/data_corrected"/>
-            <remap from="raw" to="/robot1/imu/data"/>
-            <param name="calib_file" value="/home/ubuntu/Eurobot2023_ws_new/src/localization/local_filter/imu/imu_calib/imu_calib_black.yaml"/>
+        <param name="sub_topic" value="/$(arg robot_name)/imu/data"/>
+        <param name="pub_topic" value="/$(arg robot_name)/imu/data_cov"/>
+        <remap from="/cmd_vel" to="/$(arg robot_name)/cmd_vel"/>
+        <remap from="/ekf_pose" to="/$(arg robot_name)/ekf_pose_in_pose"/>
 
-        </node>
+        <param name="frame" value="$(arg robot_name_slash)imu_link"/>
 
-        <node pkg="imu_drive" type="imu_drive_node" name="imu_node" output="screen">
-            
-            <param name="active" value="true"/>
-            <param name="publish" value="true"/>
-            <param name="sub_topic" value="/$(arg robot_name)/imu/data_corrected"/>
-            <param name="pub_topic" value="/$(arg robot_name)/imu/data_cov"/>
-            <remap from="/cmd_vel" to="/$(arg robot_name)/cmd_vel"/>
-            <remap from="/ekf_pose" to="/$(arg robot_name)/ekf_pose_in_pose"/>
+    </node>
 
-            <param name="frame" value="$(arg robot_name_slash)imu_link"/>
-            <param name="update_params" value="false"/>
+    <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
+        <remap from="corrected" to="/$(arg robot_name)/imu/data_corrected"/>
+        <remap from="raw" to="/$(arg robot_name)/imu/data"/>
+        <param name="calib_file" value="/home/ubuntu/Eurobot2023_ws_new/src/localization/local_filter/imu/imu_calib/$(arg robot_name).yaml"/>
 
-            <param name="covariance_vx" value="0.05"/>
-            <param name="covariance_vy" value="0.05"/>
-            <param name="covariance_vz" value="0.1"/>
-            <param name="covariance_ax" value="0.11"/>
-            <param name="covariance_ay" value="0.11"/>
-            <param name="covariance_az" value="0.2"/>
-
-            <param name="cov_multi_vel" value="0.2"/>
-            <param name="cov_multi_acl" value="0.2"/>
-
-            <param name="filter_prev" value="0.2"/>
-
-            <param name="using_nav_vel_cb" value="false"/>    <!-- "true" for cmd_vel, "false" for ekf_pose-->
-
-        </node>
-    </group> 
-
-
+    </node>
 
 </launch>

@@ -102,31 +102,19 @@ bool AreaObstaclesExtractor::updateParams(std_srvs::Empty::Request& req, std_srv
 
 void AreaObstaclesExtractor::obstacleCallback(const obstacle_detector::Obstacles::ConstPtr& ptr)
 {
-  static tf2_ros::TransformListener tfListener(tfBuffer);
-
-  ros::Time now = ros::Time::now();
-  output_obstacles_array_.header.stamp = now;
+  output_obstacles_array_.header.stamp = ptr->header.stamp;
   output_obstacles_array_.header.frame_id = p_parent_frame_;
 
   // Clear all previous obstacles
   output_obstacles_array_.circles.clear();
-
-  // Get tf transform from base_footprint to map
-  geometry_msgs::TransformStamped transformStamped;
-  try{
-      transformStamped = tfBuffer.lookupTransform(p_parent_frame_, ptr->header.frame_id, ros::Time(0));
-  }
-  catch (tf2::TransformException &ex) {
-    ROS_WARN("%s", ex.what());
-    return;
-  }
-
   output_marker_array_.markers.clear();
+
   int id = 0;
+
   for (const obstacle_detector::CircleObstacle& circle : ptr->circles)
   {
     // Check obstacle boundary
-    if (checkBoundary(obstacle_to_base.point))
+    if (checkBoundary(circle.center))
     {
       obstacle_detector::CircleObstacle circle_msg;
       circle_msg = circle;

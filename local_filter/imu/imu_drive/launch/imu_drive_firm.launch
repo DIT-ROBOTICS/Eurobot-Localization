@@ -16,7 +16,7 @@
 
         <rosparam command="load" file="$(find imu_drive)/param/imu_drive_firm.yaml" if="$(eval arg('param')==1)"/>
 
-        <param name="sub_topic" value="/$(arg robot_name)/imu/data"/>
+        <param name="sub_topic" value="/$(arg robot_name)/imu/data_corrected"/>
         <param name="pub_topic" value="/$(arg robot_name)/imu/data_cov"/>
         <remap from="/cmd_vel" to="/$(arg robot_name)/cmd_vel"/>
         <remap from="/ekf_pose" to="/$(arg robot_name)/ekf_pose_in_pose"/>
@@ -28,7 +28,7 @@
     <node pkg="imu_calib" type="apply_calib" name="apply_calib" output="screen">
         <remap from="corrected" to="/$(arg robot_name)/imu/data_corrected"/>
         <remap from="raw" to="/$(arg robot_name)/imu/data"/>
-        <param name="calib_file" value="/home/ubuntu/Eurobot2023_ws_new/src/localization/local_filter/imu/imu_calib/$(arg robot_name).yaml"/>
+        <param name="calib_file" value="/home/leokang/Eurobot2023_localization_ws/src/localization/local_filter/imu/imu_calib/imu_calib_4.yaml"/>
 
     </node>
 

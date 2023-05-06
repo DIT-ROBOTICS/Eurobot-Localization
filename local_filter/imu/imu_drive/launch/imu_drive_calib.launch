@@ -6,7 +6,7 @@
     <!-- Add calibration on imu raw data -->
     <node pkg="imu_calib" type="do_calib" name="do_calib" output="screen">
         <remap from="imu" to="/imu/data_raw"/>
-        <param name="output_file" value="/home/leokang/Eurobot2023_localization_ws/src/localization/local_filter/imu/imu_calib/imu_calib_black.yaml"/>
+        <param name="output_file" value="/home/leokang/Eurobot2023_localization_ws/src/localization/local_filter/imu/imu_calib/imu_calib_4.yaml"/>
     </node>
 
 </launch>

@@ -21,4 +21,4 @@ cov_multi_acl: 0.2
 using_nav_vel_cb: false
 
 # Low pass filter -> beleive previous
-filter_prev: 0.1
+filter_prev: 0.3

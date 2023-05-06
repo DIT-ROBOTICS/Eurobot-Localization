@@ -68,7 +68,7 @@ imu_node:
   using_nav_vel_cb: false
 
   # Low pass filter -> beleive previous
-  filter_prev: 0.1
+  filter_prev: 0.5
 
   using_dynamic_reconf: true
 
